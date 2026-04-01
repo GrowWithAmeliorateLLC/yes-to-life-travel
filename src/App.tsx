@@ -59,7 +59,7 @@ const tools: Tool[] = [
     ],
     buildPrompt: (v) => {
       const flightsUrl = gFlights(v.origin)
-      return `Find 3-5 complete trip packages within this budget. Return ONLY valid JSON — no markdown, no backticks, no text before or after the JSON.
+      return `You are an elite travel intelligence specialist. Find 3-5 complete trip packages within this budget. Return ONLY valid JSON — no markdown, no backticks, no text before or after.
 
 TRIP:
 - Flying from: ${v.origin}
@@ -68,15 +68,20 @@ TRIP:
 - Travelers: ${v.travelers}
 - Vibe: ${v.vibe || 'open to anything'}
 
-CRITICAL URL RULES — only use these exact URLs, never make up your own:
+RESEARCH BRIEF — for each destination, evaluate ALL of these before selecting:
+FLIGHTS: Consider major carriers AND regional operators, charter options, codeshare combinations that seat on the same plane cheaper, foreign market pricing (buying through non-US booking sites like UK/DE/IN), award redemption paths, and optimal date combinations within the window that hit lower fare buckets.
+HOTELS: Consider flash sales, points redemptions, calling direct for unpublished corporate/consortium rates, rate parity gaps between OTAs and direct, and shoulder-season timing near the dates.
+Select 3-5 packages that represent genuinely different destinations AND booking strategies — not variations of the same approach.
+
+URL RULES — only use these, never make up your own:
 - All Google Flights links: ${flightsUrl}
 - Airlines: ${AIRLINES}
 - Hotels: ${HOTEL_BRANDS}
 - Booking.com: https://www.booking.com/searchresults.html?ss=CITYNAME
 
-JSON structure (return this exactly):
+JSON structure (return exactly this):
 {
-  "summary": "1-2 sentences on what destinations fit and why",
+  "summary": "1-2 sentences on destinations considered and how the budget math works",
   "trips": [
     {
       "rank": 1,
@@ -106,11 +111,11 @@ JSON structure (return this exactly):
           { "label": "Search Booking.com", "url": "https://www.booking.com/searchresults.html?ss=Lisbon" }
         ]
       },
-      "why_fits": "One sentence why this fits the budget",
-      "insider_tip": "One money-saving tip"
+      "why_fits": "One sentence on why this fits the budget — include the specific angle used (charter, points, direct rate, etc.)",
+      "insider_tip": "One concrete money-saving tip specific to this destination and booking"
     }
   ],
-  "pro_tip": "One overall insight for these dates"
+  "pro_tip": "One overall insight — calendar timing, booking sequence, or arbitrage angle for these specific dates"
 }
 Badges: Best Overall Value, Biggest Surprise, Most Adventurous, Best Beach, Best City Break, Hidden Gem, Best Food Scene, Best Value Luxury, Family Favorite
 Return 3-5 diverse destinations. ONLY use the URLs listed above.`
@@ -134,42 +139,52 @@ Return 3-5 diverse destinations. ONLY use the URLs listed above.`
     ],
     buildPrompt: (v) => {
       const searchUrl = gFlights(v.origin, v.destination)
-      return `Find the 3-5 best bookable flight deals. Return ONLY valid JSON — no markdown, no backticks, no text before or after.
+      return `You are an elite aviation market analyst. Find the 3-5 best bookable flight deals using deep market intelligence. Return ONLY valid JSON — no markdown, no backticks, no text before or after.
 
 TRIP:
 - From: ${v.origin}
 - To: ${v.destination}
 - Dates: ${v.dates}
 - Travelers: ${v.travelers}
-- Programs: ${v.programs || 'none'}
+- Programs: ${v.programs || 'none specified'}
 
-CRITICAL URL RULES — only use these, never invent deep links:
-- Google Flights (use for ALL flight links): ${searchUrl}
+RESEARCH BRIEF — evaluate ALL of these angles before selecting the 3-5 best deals:
+1. FULL CARRIER MAP: Major scheduled airlines + regional subsidiaries + charter operators + wet lease arrangements + codeshare combinations that produce a cheaper seat on the same plane (e.g. booking a BA-operated flight through Iberia, or a Lufthansa flight through Swiss)
+2. CALENDAR INTELLIGENCE: Within ${v.dates}, identify which specific departure dates hit lower pricing due to demand forecasting gaps, schedule inventory openings, or day-of-week patterns — note the optimal dates in the timing field
+3. FOREIGN MARKET ARBITRAGE: Check if the same seat is sold cheaper through non-US booking markets (UK, Germany, India, Japan are common wins) — include this as a deal if the savings are meaningful
+4. AWARD & MILES PATHS: ${v.programs ? `Using ${v.programs}:` : ''} Identify direct award options, partner airline redemptions, transfer chain opportunities, and calendar windows when premium award space opens
+5. TRUE GROUND COST: Consider all realistic airports within range of ${v.origin} — a marginally cheaper fare from a farther airport may cost more door-to-door; flag when the closest airport is genuinely the best option
+6. HIDDEN FEES FACTOR: Account for baggage, seat selection, and change fees when comparing headline prices — note when a "cheaper" fare is actually more expensive all-in
+
+Select 3-5 deals that each represent a DIFFERENT strategy — e.g. one best-value economy, one codeshare trick, one foreign market buy, one award redemption, one optimal-date play. Don't return 3 versions of the same approach.
+
+URL RULES — only use these, never invent deep links:
+- Google Flights (use for ALL search links): ${searchUrl}
 - Airlines: ${AIRLINES}
 
-JSON structure:
+JSON structure (return exactly this):
 {
-  "summary": "1-2 sentences of context about this route and timing",
+  "summary": "1-2 sentences of market context — what makes this route/timing challenging or interesting",
   "deals": [
     {
       "rank": 1,
       "badge": "Best Value",
-      "title": "Carrier + routing",
+      "title": "Carrier + key routing",
       "price_range": "$XXX–XXX per person",
       "route": "CLT → FRA → MXP",
-      "timing": "Departs Dec 22, ~14h total",
-      "why_best": "One punchy sentence",
-      "unique_angle": "The specific trick — codeshare, foreign market, award angle",
+      "timing": "Best on Dec 22 or 23 — fares drop ~18% vs Dec 24",
+      "why_best": "One punchy sentence on why this tops the list",
+      "unique_angle": "The specific intelligence: name the exact trick — codeshare combo, foreign market, award program + partner, charter operator, pricing anomaly date, etc.",
       "booking_links": [
         { "label": "Search Google Flights", "url": "${searchUrl}" },
         { "label": "Book on United", "url": "https://www.united.com" }
       ]
     }
   ],
-  "pro_tip": "One actionable tip"
+  "pro_tip": "One actionable insider tip: booking sequence, specific date to target, program transfer to make, or foreign site to check"
 }
-Badges: Best Value, Award Sweet Spot, Budget Pick, Miles Winner, Hidden Gem, Direct Route, Family Pick
-Return 3-5 deals. ONLY use the Google Flights URL above.`
+Badges: Best Value, Award Sweet Spot, Budget Pick, Miles Winner, Hidden Gem, Direct Route, Family Pick, Foreign Market Find, Charter Option
+Return 3-5 deals. ONLY use the Google Flights URL above for search links.`
     }
   },
   {
@@ -190,42 +205,52 @@ Return 3-5 deals. ONLY use the Google Flights URL above.`
     buildPrompt: (v) => {
       const bookingUrl = bCom(v.destination)
       const hotelsUrl = gHotels(v.destination)
-      return `Find the 3-5 best bookable hotel deals. Return ONLY valid JSON — no markdown, no backticks, no text before or after.
+      return `You are an elite luxury hotel deal specialist. Find the 3-5 best bookable hotel deals using insider knowledge of unpublished rates, flash sales, and points arbitrage. Return ONLY valid JSON — no markdown, no backticks, no text before or after.
 
 STAY:
 - Destination: ${v.destination}
 - Dates: ${v.dates}
 - Preferences: ${v.preferences || '4–5 star, great location, best value'}
-- Programs: ${v.programs || 'none'}
+- Programs: ${v.programs || 'none specified'}
 
-CRITICAL URL RULES — only use these, never invent deep links:
+RESEARCH BRIEF — evaluate ALL of these angles before selecting the 3-5 best deals:
+1. UNPUBLISHED RATES: Rates not listed on any OTA — available by calling the hotel directly and referencing corporate, consortium (Virtuoso, Amex FHR, travel agent), AAA, AARP, or government rates. For each relevant deal, note the exact script: what to say when calling
+2. POINTS & AWARD REDEMPTIONS: ${v.programs ? `Using ${v.programs}:` : ''} Identify the best points redemption opportunities — which programs, which specific properties, points-per-night rates, and whether points + cash is better math. Flag fifth-night-free or bonus points promotions
+3. RATE PARITY VIOLATIONS: Where booking direct genuinely beats OTA pricing (and by how much), or where a specific OTA undercuts the hotel's own rate due to inventory dumping
+4. FLASH SALES & PROMOTIONS: Any advance purchase, early booking, last-minute, or seasonal promotions. Note which booking platforms aggregate flash sales for this market
+5. SHOULDER SEASON WINDOWS: Identify if any dates within or near ${v.dates} drop pricing significantly — even 2-3 days shift can mean 20-40% less at the same property
+6. HIDDEN FEE FORENSICS: Note any mandatory resort fees, destination charges, or service fees that don't appear in headline rate
+
+Select 3-5 deals that each represent a DIFFERENT booking strategy — e.g. one best points redemption, one call-direct play, one rate parity win, one flash sale, one best-value property. Don't return 3 versions of the same approach.
+
+URL RULES — only use these, never invent deep links:
 - Booking.com: ${bookingUrl}
 - Google Hotels: ${hotelsUrl}
 - Hotel brands: ${HOTEL_BRANDS}
 
-JSON structure:
+JSON structure (return exactly this):
 {
-  "summary": "1-2 sentences of context about this destination and timing",
+  "summary": "1-2 sentences on market context — what drives pricing here and what the smart money does",
   "deals": [
     {
       "rank": 1,
       "badge": "Best Deal",
-      "title": "Hotel Name, neighborhood",
+      "title": "Hotel Name, specific neighborhood",
       "stars": 5,
       "price_range": "$XXX/night",
       "strategy": "How to get this price (max 8 words)",
-      "why_best": "One punchy sentence",
-      "unique_angle": "The specific angle — unpublished rate, points sweet spot, rate parity gap",
+      "why_best": "One punchy sentence on why this tops the list",
+      "unique_angle": "The specific intelligence: exact call script, points program + redemption rate, OTA gap amount, flash sale platform, or rate parity trick",
       "booking_links": [
         { "label": "Book Direct", "url": "https://www.hotelbrand.com" },
         { "label": "Search Booking.com", "url": "${bookingUrl}" }
       ]
     }
   ],
-  "pro_tip": "One specific actionable tip"
+  "pro_tip": "One concrete actionable tip: what to say when calling, which program to transfer points to, which dates to target, or which platform has the best current rate"
 }
-Badges: Best Deal, Points Sweet Spot, Call Direct, Flash Sale, Boutique Pick, Best Views, Family Pick, Adults Only
-Return 3-5 properties. Strategy field max 8 words. ONLY use the URLs above.`
+Badges: Best Deal, Points Sweet Spot, Call Direct, Flash Sale, Boutique Pick, Best Views, Family Pick, Adults Only, Rate Parity Win
+Return 3-5 properties. Keep strategy field SHORT (max 8 words). ONLY use the URLs listed above.`
     }
   },
 ]
