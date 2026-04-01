@@ -23,132 +23,98 @@ export interface Field {
   optional?: boolean
 }
 
-const FLIGHT_JSON_SCHEMA = `
-Return ONLY a valid JSON object — no markdown, no backticks, no text before or after:
-{
-  "summary": "1-2 sentences of key context about this route and timing",
-  "deals": [
-    {
-      "rank": 1,
-      "badge": "Best Value",
-      "title": "Carrier + key routing",
-      "price_range": "$XXX–XXX per person",
-      "route": "CLT → FRA → MXP",
-      "timing": "Departs Dec 22, ~14h total",
-      "why_best": "One punchy sentence on why this tops the list",
-      "unique_angle": "The specific trick — codeshare, foreign market, award angle, pricing anomaly, etc.",
-      "booking_links": [
-        { "label": "Search Google Flights", "url": "https://www.google.com/flights?hl=en#flt=CLT.MXP.2025-12-22*MXP.CLT.2025-12-29;c:USD;e:1;sd:1;t:f" },
-        { "label": "Book on United", "url": "https://www.united.com" }
-      ]
-    }
-  ],
-  "pro_tip": "One specific actionable tip to save more or get an upgrade"
+// Pre-build reliable booking URLs from user inputs — never rely on Claude to invent deep links
+function gFlights(origin: string, destination?: string) {
+  const q = destination
+    ? encodeURIComponent(`Flights from ${origin} to ${destination}`)
+    : encodeURIComponent(`Flights from ${origin}`)
+  return `https://www.google.com/travel/flights?q=${q}`
 }
-Badge options: Best Value, Award Sweet Spot, Budget Pick, Miles Winner, Hidden Gem, Direct Route, Family Pick
-Include 3-5 deals. Build all Google Flights URLs using actual IATA codes and dates.
-`
+function bCom(destination: string) {
+  return `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(destination)}`
+}
+function gHotels(destination: string) {
+  return `https://www.google.com/travel/hotels?q=${encodeURIComponent(`Hotels in ${destination}`)}`
+}
 
-const HOTEL_JSON_SCHEMA = `
-Return ONLY a valid JSON object — no markdown, no backticks, no text before or after:
-{
-  "summary": "1-2 sentences of key context about this destination and timing",
-  "deals": [
-    {
-      "rank": 1,
-      "badge": "Best Deal",
-      "title": "Hotel Name, specific neighborhood",
-      "stars": 5,
-      "price_range": "$XXX/night",
-      "strategy": "How to get this price",
-      "why_best": "One punchy sentence on why this property tops the list",
-      "unique_angle": "The specific angle — unpublished rate, points sweet spot, rate parity gap, timing trick, etc.",
-      "booking_links": [
-        { "label": "Book Direct", "url": "https://www.propertywebsite.com" },
-        { "label": "Search Booking.com", "url": "https://www.booking.com/searchresults.html?ss=DESTINATION" }
-      ]
-    }
-  ],
-  "pro_tip": "One specific actionable tip"
-}
-Badge options: Best Deal, Points Sweet Spot, Call Direct, Flash Sale, Boutique Pick, Best Views, Family Pick, Adults Only
-Include 3-5 properties ranked by overall value.
-`
-
-const RANDOMIZER_JSON_SCHEMA = `
-Return ONLY a valid JSON object — no markdown, no backticks, no text before or after:
-{
-  "summary": "1-2 sentences on what destinations were considered and why they fit the budget",
-  "trips": [
-    {
-      "rank": 1,
-      "badge": "Best Overall Value",
-      "destination": "Lisbon, Portugal",
-      "country_emoji": "🇵🇹",
-      "vibe": "sun-drenched city breaks, world-class food, walkable cobblestone hills",
-      "total_per_person": "$1,850",
-      "nights": 7,
-      "flight": {
-        "carrier": "TAP Air Portugal",
-        "route": "CLT → LIS",
-        "price_per_person": "$650 roundtrip",
-        "booking_links": [
-          { "label": "Search Google Flights", "url": "https://www.google.com/flights?hl=en#flt=CLT.LIS.2025-12-22*LIS.CLT.2025-12-29;c:USD;e:1;sd:1;t:f" },
-          { "label": "Book on TAP", "url": "https://www.tapairportugal.com" }
-        ]
-      },
-      "hotel": {
-        "name": "Bairro Alto Hotel",
-        "stars": 5,
-        "area": "Chiado",
-        "price_per_night": "$165",
-        "total_hotel": "$1,155 for 7 nights",
-        "booking_links": [
-          { "label": "Book Direct", "url": "https://www.bairroaltohotel.com" },
-          { "label": "Search Booking.com", "url": "https://www.booking.com/searchresults.html?ss=Lisbon" }
-        ]
-      },
-      "why_fits": "One sentence on why this package fits the stated budget",
-      "insider_tip": "One specific tip to make this trip even better or cheaper"
-    }
-  ],
-  "pro_tip": "One overall money-saving insight for traveling during these dates"
-}
-Badge options: Best Overall Value, Biggest Surprise, Most Adventurous, Best Beach, Best City Break, Hidden Gem, Best Food Scene, Best Value Luxury, Family Favorite
-Include 3-5 trips ranked by overall value. Use diverse destinations. Build Google Flights URLs with real IATA airport codes.
-`
+const AIRLINES = `United: https://www.united.com | Delta: https://www.delta.com | American: https://www.aa.com | British Airways: https://www.britishairways.com | Lufthansa: https://www.lufthansa.com | Air France: https://www.airfrance.com | KLM: https://www.klm.com | Swiss: https://www.swiss.com | TAP: https://www.tapairportugal.com | Emirates: https://www.emirates.com | Qatar: https://www.qatarairways.com | Iberia: https://www.iberia.com`
+const HOTEL_BRANDS = `Marriott: https://www.marriott.com | Hyatt: https://www.hyatt.com | Hilton: https://www.hilton.com | IHG: https://www.ihg.com | Four Seasons: https://www.fourseasons.com | Aman: https://www.aman.com`
 
 const tools: Tool[] = [
   {
     id: 'randomizer',
     icon: <Shuffle size={28} />,
     title: 'Surprise Me',
-    subtitle: 'Tell me when and how much. I’ll find where.',
+    subtitle: "Tell me when and how much. I'll find where.",
     tagline: 'budget · dates · full trip packages',
-    description: 'Enter your travel dates, budget, and who’s going. We’ll return 3–5 complete trip packages — each with a specific destination, a flight deal, and a hotel deal — all within your budget, all with links to book.',
+    description: "Enter your travel dates, budget, and who's going. We'll return 3–5 complete trip packages — each with a specific destination, a flight deal, and a hotel deal — all within your budget, all with links to book.",
     accentColor: '#8A8A3C',
     bgColor: '#F4F4E6',
     fields: [
       { key: 'origin', label: 'Flying From', placeholder: 'e.g. Charlotte, NC (CLT) or New York area' },
-      { key: 'dates', label: 'Travel Dates', placeholder: 'e.g. Dec 22–30, 2025 or flexible week in September' },
+      { key: 'dates', label: 'Travel Dates', placeholder: 'e.g. Dec 22–30, 2025 or any week in late April' },
       { key: 'budget', label: 'Total Budget Per Person', placeholder: 'e.g. $2,500 total including flights and hotel' },
-      { key: 'travelers', label: "Who's Going", placeholder: 'e.g. 2 adults, 1 child age 8 — economy is fine' },
-      { key: 'vibe', label: 'Trip Vibe', placeholder: 'e.g. beach, city, adventure, food, mix it up — surprise me!', optional: true },
+      { key: 'travelers', label: "Who's Going", placeholder: 'e.g. 2 adults, economy is fine' },
+      { key: 'vibe', label: 'Trip Vibe', placeholder: 'e.g. beach, city, adventure, food — or surprise me!', optional: true },
     ],
-    buildPrompt: (v) => `Find 3-5 complete trip packages that fit within the budget below. Each package must include a specific destination, a real flight option, and a real hotel. All must be bookable today.
+    buildPrompt: (v) => {
+      const flightsUrl = gFlights(v.origin)
+      return `Find 3-5 complete trip packages within this budget. Return ONLY valid JSON — no markdown, no backticks, no explanation before or after.
 
 TRIP DETAILS:
 - Flying from: ${v.origin}
 - Dates: ${v.dates}
-- Budget: ${v.budget} per person (covering flights + hotel combined)
+- Budget: ${v.budget} per person (flights + hotel combined)
 - Travelers: ${v.travelers}
-${v.vibe ? `- Vibe: ${v.vibe}` : '- Open to any destination that fits the budget'}
+- Vibe: ${v.vibe || 'open to anything'}
 
-Consider destinations across: Europe, Caribbean, Central America, Southeast Asia, South America, domestic US surprises. Prioritize destinations where the flight + hotel math actually works within the budget. Include a mix of well-known and less obvious destinations.
+URL RULES — use ONLY these exact URLs, never invent your own:
+- All flight search links: ${flightsUrl}
+- Airlines: ${AIRLINES}
+- Hotel brands: ${HOTEL_BRANDS}
+- Booking.com: https://www.booking.com/searchresults.html?ss=CITY_NAME
 
-For each trip: use real carriers, real hotels (4-5 stars preferred if budget allows), and build actual Google Flights URLs with IATA codes for the origin and destination airports.
-
-${RANDOMIZER_JSON_SCHEMA}`,
+Return this JSON structure exactly:
+{
+  "summary": "1-2 sentences on destinations considered and why they fit the budget",
+  "trips": [
+    {
+      "rank": 1,
+      "badge": "Best Overall Value",
+      "destination": "City, Country",
+      "country_emoji": "🏖",
+      "vibe": "short evocative description",
+      "total_per_person": "$X,XXX",
+      "nights": 7,
+      "flight": {
+        "carrier": "Airline Name",
+        "route": "CLT → LIS",
+        "price_per_person": "$XXX roundtrip",
+        "booking_links": [
+          { "label": "Search Google Flights", "url": "${flightsUrl}" },
+          { "label": "Book on [Airline]", "url": "https://www.airlinesite.com" }
+        ]
+      },
+      "hotel": {
+        "name": "Hotel Name",
+        "stars": 4,
+        "area": "Neighborhood",
+        "price_per_night": "$XXX",
+        "total_hotel": "$X,XXX for N nights",
+        "booking_links": [
+          { "label": "Book Direct", "url": "https://www.hotelsite.com" },
+          { "label": "Search Booking.com", "url": "https://www.booking.com/searchresults.html?ss=CITY" }
+        ]
+      },
+      "why_fits": "One sentence why this fits the budget",
+      "insider_tip": "One specific money-saving tip"
+    }
+  ],
+  "pro_tip": "One overall insight for these travel dates"
+}
+Badge options: Best Overall Value, Biggest Surprise, Most Adventurous, Best Beach, Best City Break, Hidden Gem, Best Food Scene, Best Value Luxury, Family Favorite
+Include 3-5 diverse destinations. Do NOT invent URLs — only use the ones specified above.`
+    }
   },
   {
     id: 'flights',
@@ -166,19 +132,45 @@ ${RANDOMIZER_JSON_SCHEMA}`,
       { key: 'travelers', label: "Who's Traveling", placeholder: 'e.g. 2 adults, 2 children, economy or premium economy' },
       { key: 'programs', label: 'Loyalty Programs', placeholder: 'e.g. Chase UR, United MileagePlus, Delta SkyMiles', optional: true },
     ],
-    buildPrompt: (v) => `Find the 3-5 best bookable flight deals for this trip. Focus on real options people can book today.
+    buildPrompt: (v) => {
+      const searchUrl = gFlights(v.origin, v.destination)
+      return `Find the 3-5 best bookable flight deals for this trip. Return ONLY valid JSON — no markdown, no backticks, no explanation.
 
 TRIP DETAILS:
 - From: ${v.origin}
 - To: ${v.destination}
 - Dates: ${v.dates}
 - Travelers: ${v.travelers}
-${v.programs ? `- Loyalty programs: ${v.programs}` : '- No specific loyalty programs'}
+- Programs: ${v.programs || 'none specified'}
 
-Consider: best value economy, premium economy, codeshare tricks, foreign market bookings, award redemptions, optimal date combinations.
-Build real Google Flights URLs using actual IATA codes and dates.
+URL RULES — use ONLY these, never invent deep links:
+- Google Flights (use for ALL flight search links): ${searchUrl}
+- Airlines: ${AIRLINES}
 
-${FLIGHT_JSON_SCHEMA}`,
+Return this JSON exactly:
+{
+  "summary": "1-2 sentences of context about this route and timing",
+  "deals": [
+    {
+      "rank": 1,
+      "badge": "Best Value",
+      "title": "Carrier + routing",
+      "price_range": "$XXX–XXX per person",
+      "route": "CLT → FRA → MXP",
+      "timing": "Departs Dec 22, ~14h total",
+      "why_best": "One punchy sentence on why this tops the list",
+      "unique_angle": "The specific trick — codeshare, foreign market, award angle, etc.",
+      "booking_links": [
+        { "label": "Search Google Flights", "url": "${searchUrl}" },
+        { "label": "Book on [Airline]", "url": "https://www.airline.com" }
+      ]
+    }
+  ],
+  "pro_tip": "One actionable tip to save more or get an upgrade"
+}
+Badge options: Best Value, Award Sweet Spot, Budget Pick, Miles Winner, Hidden Gem, Direct Route, Family Pick
+Include 3-5 deals. Only use the Google Flights URL provided above.`
+    }
   },
   {
     id: 'hotels',
@@ -186,26 +178,55 @@ ${FLIGHT_JSON_SCHEMA}`,
     title: 'Find My Hotel',
     subtitle: 'Luxury at the price that says yes.',
     tagline: 'flash sales · points · unpublished rates · direct deals',
-    description: 'Tell us where you’re staying and we surface the 3–5 best bookable deals at 4 and 5-star properties — flash sales, points sweet spots, call-direct rates — with links to book each one.',
+    description: "Tell us where you're staying and we surface the 3–5 best bookable deals at 4 and 5-star properties — flash sales, points sweet spots, call-direct rates — with links to book each one.",
     accentColor: '#8B9ED9',
     bgColor: '#EEF1FB',
     fields: [
-      { key: 'destination', label: 'Destination', placeholder: 'e.g. Amalfi Coast, Italy or Tulum, Mexico' },
-      { key: 'dates', label: 'Stay Dates', placeholder: 'e.g. August 10–20, 2025 (flexible by a few days)' },
-      { key: 'preferences', label: "What You're Looking For", placeholder: 'e.g. Beachfront, adults-only, pool, open to boutique or big brand, max $400/night', multiline: true },
-      { key: 'programs', label: 'Hotel Loyalty Programs', placeholder: 'e.g. World of Hyatt, Marriott Bonvoy, Hilton Honors', optional: true },
+      { key: 'destination', label: 'Destination', placeholder: 'e.g. Venice, Italy or Tulum, Mexico' },
+      { key: 'dates', label: 'Stay Dates', placeholder: 'e.g. Dec 22–30, 2025 (flexible by a few days)' },
+      { key: 'preferences', label: "What You're Looking For", placeholder: 'e.g. 4–5 star, canal view, central location, adults-only preferred', multiline: true, optional: true },
+      { key: 'programs', label: 'Hotel Loyalty Programs', placeholder: 'e.g. World of Hyatt, Marriott Bonvoy, IHG, Hilton Honors', optional: true },
     ],
-    buildPrompt: (v) => `Find the 3-5 best bookable hotel deals for this stay. Focus on real properties with real booking strategies.
+    buildPrompt: (v) => {
+      const bookingUrl = bCom(v.destination)
+      const googleHotelsLink = gHotels(v.destination)
+      return `Find the 3-5 best bookable hotel deals for this stay. Return ONLY valid JSON — no markdown, no backticks, no explanation.
 
 STAY DETAILS:
 - Destination: ${v.destination}
 - Dates: ${v.dates}
-- Preferences: ${v.preferences}
-${v.programs ? `- Loyalty programs: ${v.programs}` : '- No specific loyalty programs'}
+- Preferences: ${v.preferences || '4–5 star, good location, best value'}
+- Programs: ${v.programs || 'none specified'}
 
-Consider: flash sales, points redemptions, call-direct unpublished rates, OTA vs direct gaps, shoulder season timing.
+URL RULES — use ONLY these, never invent deep links:
+- Booking.com search: ${bookingUrl}
+- Google Hotels: ${googleHotelsLink}
+- Hotel brands: ${HOTEL_BRANDS}
 
-${HOTEL_JSON_SCHEMA}`,
+Return this JSON exactly:
+{
+  "summary": "1-2 sentences of context about this destination and timing",
+  "deals": [
+    {
+      "rank": 1,
+      "badge": "Best Deal",
+      "title": "Hotel Name, neighborhood",
+      "stars": 5,
+      "price_range": "$XXX/night",
+      "strategy": "How to get this price (max 8 words)",
+      "why_best": "One punchy sentence on why this tops the list",
+      "unique_angle": "The specific angle — unpublished rate, points sweet spot, rate parity gap, etc.",
+      "booking_links": [
+        { "label": "Book Direct", "url": "https://www.hotelbrand.com" },
+        { "label": "Search Booking.com", "url": "${bookingUrl}" }
+      ]
+    }
+  ],
+  "pro_tip": "One specific actionable tip"
+}
+Badge options: Best Deal, Points Sweet Spot, Call Direct, Flash Sale, Boutique Pick, Best Views, Family Pick, Adults Only
+Include 3-5 properties. Keep strategy SHORT. Only use the URLs specified above.`
+    }
   },
 ]
 
@@ -251,7 +272,7 @@ export default function App() {
             Your dream trip is<br /><em style={{ fontStyle: 'italic', color: 'var(--peach)' }}>closer than you think.</em>
           </h1>
           <p style={{ color: 'rgba(255,255,255,0.82)', maxWidth: 500, margin: '0 auto 2.5rem', fontSize: '1rem', lineHeight: 1.85, fontWeight: 300 }}>
-            Tell us where you want to go — or let us surprise you. We’ll find the best flight + hotel deals you can actually book right now.
+            Tell us where you want to go — or let us surprise you. We'll find the best flight + hotel deals you can actually book right now.
           </p>
           <button onClick={() => document.getElementById('tools')?.scrollIntoView({ behavior: 'smooth' })}
             style={{ background: 'var(--white)', color: 'var(--coral)', border: 'none', padding: '0.95rem 2.4rem', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1.05rem', cursor: 'pointer', borderRadius: 100, boxShadow: '0 4px 20px rgba(0,0,0,0.15)', transition: 'transform 0.2s, box-shadow 0.2s' }}
@@ -274,21 +295,18 @@ export default function App() {
           <span style={{ fontFamily: 'var(--font-hand)', fontSize: '1.1rem', fontWeight: 600, color: 'var(--coral)', display: 'block', marginBottom: '0.5rem' }}>where are you dreaming of going?</span>
           <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 'clamp(2rem, 4vw, 3rem)', color: 'var(--dark)', lineHeight: 1.15 }}>
             Tell us your trip.<br />
-            <em style={{ fontStyle: 'italic', color: 'var(--coral)', fontWeight: 700 }}>We’ll find the way to make it happen.</em>
+            <em style={{ fontStyle: 'italic', color: 'var(--coral)', fontWeight: 700 }}>We'll find the way to make it happen.</em>
           </h2>
         </div>
 
-        {/* Surprise Me — Featured full-width card */}
         <RandomizerCard tool={randomizer} onClick={() => setActiveTool(randomizer)} />
 
-        {/* Divider */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', margin: '2rem 0' }}>
           <div style={{ flex: 1, height: 1, background: 'var(--pink-soft)' }} />
           <span style={{ fontFamily: 'var(--font-hand)', fontWeight: 600, fontSize: '0.9rem', color: 'var(--dark-mid)', whiteSpace: 'nowrap' }}>or search your own trip</span>
           <div style={{ flex: 1, height: 1, background: 'var(--pink-soft)' }} />
         </div>
 
-        {/* Flights + Hotels grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.25rem' }}>
           {pairTools.map(tool => <ToolCard key={tool.id} tool={tool} onClick={() => setActiveTool(tool)} />)}
         </div>
@@ -333,10 +351,7 @@ function RandomizerCard({ tool, onClick }: { tool: Tool; onClick: () => void }) 
     <button onClick={onClick} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
       style={{ width: '100%', background: hovered ? tool.bgColor : 'var(--white)', border: `2.5px solid ${hovered ? tool.accentColor : 'var(--pink-soft)'}`, borderRadius: 20, cursor: 'pointer', padding: '2.25rem 2.5rem', textAlign: 'left', position: 'relative', overflow: 'hidden', transition: 'all 0.25s ease', boxShadow: hovered ? `0 16px 48px ${tool.accentColor}22` : '0 2px 12px rgba(44,31,26,0.05)', transform: hovered ? 'translateY(-3px)' : 'none', display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}
     >
-      {/* Watermark emoji */}
       <div style={{ position: 'absolute', right: '1.5rem', top: '50%', transform: 'translateY(-50%)', fontSize: '7rem', opacity: hovered ? 0.08 : 0.04, transition: 'opacity 0.25s', pointerEvents: 'none', userSelect: 'none' }}>🎲</div>
-
-      {/* Left: icon + heading */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexShrink: 0 }}>
         <div style={{ width: 64, height: 64, background: hovered ? tool.accentColor : 'var(--blush)', borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', color: hovered ? 'white' : tool.accentColor, transition: 'all 0.25s', border: `2px solid ${hovered ? tool.accentColor : 'var(--pink-soft)'}`, boxShadow: hovered ? `0 6px 20px ${tool.accentColor}44` : 'none', flexShrink: 0 }}>
           {tool.icon}
@@ -346,18 +361,13 @@ function RandomizerCard({ tool, onClick }: { tool: Tool; onClick: () => void }) 
           <p style={{ fontFamily: 'var(--font-hand)', fontWeight: 600, fontSize: '1rem', color: hovered ? tool.accentColor : 'var(--dark-mid)', transition: 'color 0.25s', margin: 0 }}>{tool.subtitle}</p>
         </div>
       </div>
-
-      {/* Middle: description */}
       <div style={{ flex: 1, minWidth: 200 }}>
         <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.72rem', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: tool.accentColor, marginBottom: '0.5rem', opacity: 0.85 }}>{tool.tagline}</p>
         <p style={{ fontSize: '0.875rem', color: 'var(--dark-mid)', lineHeight: 1.7, fontWeight: 300, margin: 0 }}>{tool.description}</p>
       </div>
-
-      {/* Right: CTA */}
       <div style={{ flexShrink: 0 }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: hovered ? tool.accentColor : 'transparent', color: hovered ? 'white' : tool.accentColor, border: `2px solid ${tool.accentColor}`, borderRadius: 100, padding: '0.65rem 1.6rem', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1rem', transition: 'all 0.22s', whiteSpace: 'nowrap' }}>
-          Surprise Me
-          <ArrowRight size={16} style={{ transform: hovered ? 'translateX(3px)' : 'none', transition: 'transform 0.2s' }} />
+          Surprise Me <ArrowRight size={16} style={{ transform: hovered ? 'translateX(3px)' : 'none', transition: 'transform 0.2s' }} />
         </div>
       </div>
     </button>
