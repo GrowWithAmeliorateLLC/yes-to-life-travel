@@ -2,35 +2,21 @@ import React, { useState, useRef, useEffect } from 'react'
 import { X, Loader2, RotateCcw, ExternalLink, Zap, Plane, Hotel } from 'lucide-react'
 import type { Tool } from '../App'
 
-interface Props {
-  tool: Tool
-  onClose: () => void
-}
-
+interface Props { tool: Tool; onClose: () => void }
 interface BookingLink { label: string; url: string }
 
 interface Deal {
   rank: number; badge: string; title: string; price_range: string;
-  route?: string; timing?: string; stars?: number; strategy?: string;
+  route?: string; timing?: string; strategy?: string;
   why_best: string; unique_angle: string; booking_links: BookingLink[]
 }
-
-interface TripFlight {
-  carrier: string; route: string; price_per_person: string; booking_links: BookingLink[]
-}
-
-interface TripHotel {
-  name: string; stars: number; area: string; price_per_night: string;
-  total_hotel: string; booking_links: BookingLink[]
-}
-
+interface TripFlight { carrier: string; route: string; price_per_person: string; booking_links: BookingLink[] }
+interface TripHotel { name: string; stars: number; area: string; price_per_night: string; total_hotel: string; booking_links: BookingLink[] }
 interface Trip {
   rank: number; badge: string; destination: string; country_emoji?: string;
   vibe: string; total_per_person: string; nights: number;
-  flight: TripFlight; hotel: TripHotel;
-  why_fits: string; insider_tip: string;
+  flight: TripFlight; hotel: TripHotel; why_fits: string; insider_tip: string;
 }
-
 interface DealResult { summary: string; deals: Deal[]; pro_tip: string }
 interface TripResult { summary: string; trips: Trip[]; pro_tip: string }
 type ParsedResult = DealResult | TripResult | null
@@ -60,19 +46,33 @@ const BADGE_COLORS: Record<string, { bg: string; text: string }> = {
   'Family Favorite':    { bg: '#8B9ED9', text: '#fff' },
 }
 
+// 3-strategy JSON extractor — handles Claude adding text before/after JSON
 function parseResult(raw: string): ParsedResult {
-  try {
-    const clean = raw.trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim()
-    const parsed = JSON.parse(clean)
-    if (parsed.trips && Array.isArray(parsed.trips)) return parsed as TripResult
-    if (parsed.deals && Array.isArray(parsed.deals)) return parsed as DealResult
-    return null
-  } catch { return null }
+  const strategies = [
+    raw.trim(),
+    raw.trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim(),
+    (() => { const s = raw.indexOf('{'); const e = raw.lastIndexOf('}'); return s !== -1 && e > s ? raw.substring(s, e + 1) : '' })()
+  ]
+  for (const attempt of strategies) {
+    if (!attempt) continue
+    try {
+      const p = JSON.parse(attempt)
+      if (p.trips && Array.isArray(p.trips) && p.trips.length > 0) return p as TripResult
+      if (p.deals && Array.isArray(p.deals) && p.deals.length > 0) return p as DealResult
+    } catch { /* try next strategy */ }
+  }
+  return null
 }
 
-function isTripResult(r: ParsedResult): r is TripResult {
-  return r !== null && 'trips' in r
-}
+function isTripResult(r: ParsedResult): r is TripResult { return r !== null && 'trips' in r }
+
+const BookLink = ({ link, i, color }: { link: BookingLink; i: number; color: string }) => (
+  <a href={link.url} target="_blank" rel="noopener noreferrer"
+    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.42rem 0.85rem', borderRadius: 100, fontFamily: 'var(--font-body)', fontSize: '0.76rem', fontWeight: 500, textDecoration: 'none', transition: 'opacity 0.15s', background: i === 0 ? color : 'transparent', color: i === 0 ? 'white' : color, border: `1.5px solid ${color}`, whiteSpace: 'nowrap' }}
+    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.8' }}
+    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1' }}
+  ><ExternalLink size={10} />{link.label}</a>
+)
 
 export default function ToolModal({ tool, onClose }: Props) {
   const [values, setValues] = useState<Record<string, string>>({})
@@ -108,14 +108,13 @@ export default function ToolModal({ tool, onClose }: Props) {
       const data = await response.json()
       const parsed = parseResult(data.result)
       if (parsed) setResult(parsed)
-      else throw new Error('Could not parse results. Please try again.')
+      else throw new Error('Could not parse results — please try again.')
     } catch (err: any) {
       setError(err.message || 'Something went wrong. Please try again.')
     } finally { setLoading(false) }
   }
 
   const handleReset = () => { setResult(null); setError(null); setValues({}) }
-
   const submitLabel = tool.id === 'randomizer' ? 'Surprise Me →'
     : tool.id === 'flights' ? 'Find My Flight Deal →' : 'Find My Hotel Deal →'
 
@@ -123,7 +122,8 @@ export default function ToolModal({ tool, onClose }: Props) {
     <div onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
       style={{ position: 'fixed', inset: 0, background: 'rgba(44,31,26,0.6)', backdropFilter: 'blur(6px)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', animation: 'popIn 0.22s ease both' }}
     >
-      <div style={{ background: 'var(--white)', borderRadius: 20, border: `2px solid ${tool.accentColor}44`, width: '100%', maxWidth: 740, maxHeight: '90vh', overflow: 'auto', position: 'relative', boxShadow: '0 24px 64px rgba(44,31,26,0.18)' }}>
+      {/* Modal — NO overflow:hidden on cards so text never gets clipped */}
+      <div style={{ background: 'var(--white)', borderRadius: 20, border: `2px solid ${tool.accentColor}44`, width: '100%', maxWidth: 740, maxHeight: '90vh', overflow: 'auto', boxShadow: '0 24px 64px rgba(44,31,26,0.18)' }}>
         <div style={{ height: 5, background: `linear-gradient(to right, ${tool.accentColor}, var(--peach))`, borderRadius: '20px 20px 0 0' }} />
 
         {/* Header */}
@@ -163,13 +163,8 @@ export default function ToolModal({ tool, onClose }: Props) {
             </div>
             <button onClick={handleSubmit} disabled={!allFilled || loading}
               style={{ width: '100%', padding: '0.95rem', background: allFilled && !loading ? tool.accentColor : 'var(--pink-soft)', border: 'none', borderRadius: 12, color: allFilled && !loading ? 'white' : 'var(--dark-mid)', fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 700, cursor: allFilled && !loading ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.2s ease', boxShadow: allFilled && !loading ? `0 4px 16px ${tool.accentColor}44` : 'none' }}
-              onMouseEnter={e => { if (allFilled && !loading) (e.currentTarget as HTMLElement).style.background = '#6B6B2F' }}
-              onMouseLeave={e => { if (allFilled && !loading) (e.currentTarget as HTMLElement).style.background = tool.accentColor }}
             >
-              {loading
-                ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> {tool.id === 'randomizer' ? 'Finding your perfect trips...' : 'Finding your best deals...'}</>
-                : submitLabel
-              }
+              {loading ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> {tool.id === 'randomizer' ? 'Finding your perfect trips...' : 'Finding your best deals...'}</> : submitLabel}
             </button>
             {error && <div style={{ marginTop: '1rem', padding: '0.875rem 1rem', background: '#FFF0EE', border: '1.5px solid #F4A882', borderRadius: 10, color: 'var(--coral-dark)', fontSize: '0.85rem', lineHeight: 1.6 }}>{error}</div>}
           </div>
@@ -178,44 +173,39 @@ export default function ToolModal({ tool, onClose }: Props) {
         {/* Results */}
         {result && (
           <div ref={resultRef} style={{ padding: '1.75rem 2rem', animation: 'fadeUp 0.35s ease both' }}>
-
-            {/* Summary */}
             <div style={{ background: 'var(--blush)', borderRadius: 12, padding: '1rem 1.25rem', marginBottom: '1.5rem', borderLeft: `4px solid ${tool.accentColor}` }}>
               <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.88rem', color: 'var(--dark-mid)', lineHeight: 1.7, margin: 0 }}>{result.summary}</p>
             </div>
 
-            {/* DEAL CARDS (flights / hotels) */}
+            {/* DEAL CARDS — no overflow:hidden, price+title on separate rows to prevent cutoff */}
             {!isTripResult(result) && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.25rem' }}>
                 {result.deals.map(deal => {
                   const bs = BADGE_COLORS[deal.badge] || { bg: tool.accentColor, text: '#fff' }
                   return (
-                    <div key={deal.rank} style={{ border: '1.5px solid var(--pink-soft)', borderRadius: 14, overflow: 'hidden', background: 'var(--white)', transition: 'box-shadow 0.2s' }}
+                    <div key={deal.rank} style={{ border: '1.5px solid var(--pink-soft)', borderRadius: 14, background: 'var(--white)', transition: 'box-shadow 0.2s' }}
                       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = `0 8px 28px ${tool.accentColor}18` }}
                       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = 'none' }}
                     >
-                      <div style={{ padding: '1rem 1.25rem 0.75rem', borderBottom: '1px solid var(--pink-soft)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
-                          <span style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: '1.05rem', color: 'var(--dark)' }}>#{deal.rank} {deal.title}</span>
-                          <span style={{ background: bs.bg, color: bs.text, fontFamily: 'var(--font-hand)', fontWeight: 600, fontSize: '0.78rem', padding: '0.2rem 0.65rem', borderRadius: 100, whiteSpace: 'nowrap' }}>{deal.badge}</span>
+                      <div style={{ padding: '1rem 1.25rem 0.75rem', borderBottom: '1px solid var(--pink-soft)' }}>
+                        {/* Row 1: title + badge */}
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.4rem' }}>
+                          <span style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: '1.05rem', color: 'var(--dark)', wordBreak: 'break-word', flex: 1, minWidth: 0 }}>#{deal.rank} {deal.title}</span>
+                          <span style={{ background: bs.bg, color: bs.text, fontFamily: 'var(--font-hand)', fontWeight: 600, fontSize: '0.78rem', padding: '0.2rem 0.65rem', borderRadius: 100, whiteSpace: 'nowrap', flexShrink: 0 }}>{deal.badge}</span>
                         </div>
-                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: '1.25rem', color: tool.accentColor, lineHeight: 1 }}>{deal.price_range}</div>
-                          {(deal.route || deal.strategy) && <div style={{ fontFamily: 'var(--font-body)', fontSize: '0.72rem', color: 'var(--dark-mid)', marginTop: '0.2rem' }}>{deal.route || deal.strategy}</div>}
-                        </div>
+                        {/* Row 2: price */}
+                        <div style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: '1.2rem', color: tool.accentColor, lineHeight: 1, wordBreak: 'break-word' }}>{deal.price_range}</div>
+                        {/* Row 3: route/strategy */}
+                        {(deal.route || deal.strategy) && (
+                          <div style={{ fontFamily: 'var(--font-body)', fontSize: '0.75rem', color: 'var(--dark-mid)', marginTop: '0.25rem', opacity: 0.8 }}>{deal.route || deal.strategy}</div>
+                        )}
                       </div>
                       <div style={{ padding: '0.85rem 1.25rem' }}>
                         {deal.timing && <div style={{ fontFamily: 'var(--font-body)', fontSize: '0.78rem', color: 'var(--dark-mid)', marginBottom: '0.5rem', opacity: 0.8 }}>{deal.timing}</div>}
                         <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.88rem', color: 'var(--dark)', fontWeight: 500, lineHeight: 1.6, marginBottom: '0.35rem' }}>{deal.why_best}</p>
                         <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.82rem', color: 'var(--dark-mid)', fontStyle: 'italic', lineHeight: 1.6, marginBottom: '0.85rem' }}>{deal.unique_angle}</p>
                         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                          {deal.booking_links.map((link, i) => (
-                            <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"
-                              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '0.45rem 0.9rem', borderRadius: 100, fontFamily: 'var(--font-body)', fontSize: '0.78rem', fontWeight: 500, textDecoration: 'none', transition: 'all 0.15s', background: i === 0 ? tool.accentColor : 'transparent', color: i === 0 ? 'white' : tool.accentColor, border: `1.5px solid ${tool.accentColor}` }}
-                              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.opacity = '0.85'; el.style.transform = 'translateY(-1px)' }}
-                              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.opacity = '1'; el.style.transform = 'none' }}
-                            ><ExternalLink size={11} />{link.label}</a>
-                          ))}
+                          {deal.booking_links.map((link, i) => <BookLink key={i} link={link} i={i} color={tool.accentColor} />)}
                         </div>
                       </div>
                     </div>
@@ -224,77 +214,61 @@ export default function ToolModal({ tool, onClose }: Props) {
               </div>
             )}
 
-            {/* TRIP CARDS (randomizer) */}
+            {/* TRIP CARDS — no overflow:hidden */}
             {isTripResult(result) && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginBottom: '1.25rem' }}>
                 {result.trips.map(trip => {
                   const bs = BADGE_COLORS[trip.badge] || { bg: '#8A8A3C', text: '#fff' }
                   return (
-                    <div key={trip.rank} style={{ border: '1.5px solid var(--pink-soft)', borderRadius: 16, overflow: 'hidden', background: 'var(--white)', transition: 'box-shadow 0.2s' }}
+                    <div key={trip.rank} style={{ border: '1.5px solid var(--pink-soft)', borderRadius: 16, background: 'var(--white)', transition: 'box-shadow 0.2s' }}
                       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 28px rgba(138,138,60,0.15)' }}
                       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = 'none' }}
                     >
                       {/* Trip header */}
-                      <div style={{ padding: '1.1rem 1.4rem 0.9rem', borderBottom: '1px solid var(--pink-soft)', background: 'var(--cream)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem' }}>
-                        <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.2rem', flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>{trip.country_emoji}</span>
-                            <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: '1.3rem', color: 'var(--dark)', margin: 0 }}>#{trip.rank} {trip.destination}</h3>
-                            <span style={{ background: bs.bg, color: bs.text, fontFamily: 'var(--font-hand)', fontWeight: 600, fontSize: '0.78rem', padding: '0.2rem 0.65rem', borderRadius: 100, whiteSpace: 'nowrap' }}>{trip.badge}</span>
+                      <div style={{ padding: '1.1rem 1.4rem 0.9rem', borderBottom: '1px solid var(--pink-soft)', background: 'var(--cream)', borderRadius: '15px 15px 0 0' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', flex: 1, minWidth: 0 }}>
+                            {trip.country_emoji && <span style={{ fontSize: '1.3rem', lineHeight: 1, flexShrink: 0 }}>{trip.country_emoji}</span>}
+                            <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: '1.2rem', color: 'var(--dark)', margin: 0, wordBreak: 'break-word' }}>#{trip.rank} {trip.destination}</h3>
+                            <span style={{ background: bs.bg, color: bs.text, fontFamily: 'var(--font-hand)', fontWeight: 600, fontSize: '0.78rem', padding: '0.2rem 0.65rem', borderRadius: 100, whiteSpace: 'nowrap', flexShrink: 0 }}>{trip.badge}</span>
                           </div>
-                          <p style={{ fontFamily: 'var(--font-hand)', fontWeight: 600, fontSize: '0.9rem', color: 'var(--dark-mid)', margin: 0, fontStyle: 'italic' }}>{trip.vibe}</p>
+                          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: '1.4rem', color: '#8A8A3C', lineHeight: 1 }}>{trip.total_per_person}</div>
+                            <div style={{ fontFamily: 'var(--font-body)', fontSize: '0.72rem', color: 'var(--dark-mid)', marginTop: '0.15rem' }}>per person · {trip.nights} nights</div>
+                          </div>
                         </div>
-                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: '1.5rem', color: '#8A8A3C', lineHeight: 1 }}>{trip.total_per_person}</div>
-                          <div style={{ fontFamily: 'var(--font-body)', fontSize: '0.72rem', color: 'var(--dark-mid)', marginTop: '0.2rem' }}>per person · {trip.nights} nights</div>
-                        </div>
+                        <p style={{ fontFamily: 'var(--font-hand)', fontWeight: 600, fontSize: '0.88rem', color: 'var(--dark-mid)', margin: 0, fontStyle: 'italic' }}>{trip.vibe}</p>
                       </div>
 
-                      {/* Flight + Hotel split */}
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0 }}>
-                        {/* Flight */}
+                      {/* Flight + Hotel */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
                         <div style={{ padding: '1rem 1.25rem', borderRight: '1px solid var(--pink-soft)', borderBottom: '1px solid var(--pink-soft)' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.6rem' }}>
                             <Plane size={13} color="#E8523A" />
                             <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.68rem', fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#E8523A' }}>Flight</span>
                           </div>
-                          <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.95rem', color: 'var(--dark)', marginBottom: '0.2rem' }}>{trip.flight.carrier}</p>
+                          <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.9rem', color: 'var(--dark)', marginBottom: '0.2rem', wordBreak: 'break-word' }}>{trip.flight.carrier}</p>
                           <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.78rem', color: 'var(--dark-mid)', marginBottom: '0.15rem' }}>{trip.flight.route}</p>
-                          <p style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: '1.05rem', color: '#E8523A', marginBottom: '0.7rem' }}>{trip.flight.price_per_person}</p>
+                          <p style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: '1rem', color: '#E8523A', marginBottom: '0.7rem', wordBreak: 'break-word' }}>{trip.flight.price_per_person}</p>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                            {trip.flight.booking_links.map((link, i) => (
-                              <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"
-                                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.38rem 0.75rem', borderRadius: 100, fontFamily: 'var(--font-body)', fontSize: '0.74rem', fontWeight: 500, textDecoration: 'none', transition: 'all 0.15s', background: i === 0 ? '#E8523A' : 'transparent', color: i === 0 ? 'white' : '#E8523A', border: '1.5px solid #E8523A', width: 'fit-content' }}
-                                onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.opacity = '0.85' }}
-                                onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.opacity = '1' }}
-                              ><ExternalLink size={10} />{link.label}</a>
-                            ))}
+                            {trip.flight.booking_links.map((link, i) => <BookLink key={i} link={link} i={i} color="#E8523A" />)}
                           </div>
                         </div>
-
-                        {/* Hotel */}
                         <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--pink-soft)' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.6rem' }}>
                             <Hotel size={13} color="#8B9ED9" />
                             <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.68rem', fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#8B9ED9' }}>Hotel</span>
                           </div>
-                          <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.95rem', color: 'var(--dark)', marginBottom: '0.15rem' }}>{trip.hotel.name}</p>
-                          <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.78rem', color: 'var(--dark-mid)', marginBottom: '0.15rem' }}>{trip.hotel.area} · {'★'.repeat(trip.hotel.stars)}</p>
-                          <p style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: '1.05rem', color: '#8B9ED9', marginBottom: '0.15rem' }}>{trip.hotel.price_per_night}<span style={{ fontSize: '0.72rem', fontWeight: 400, color: 'var(--dark-mid)' }}>/night</span></p>
+                          <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.9rem', color: 'var(--dark)', marginBottom: '0.15rem', wordBreak: 'break-word' }}>{trip.hotel.name}</p>
+                          <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.78rem', color: 'var(--dark-mid)', marginBottom: '0.15rem' }}>{trip.hotel.area} · {'★'.repeat(Math.min(trip.hotel.stars || 4, 5))}</p>
+                          <p style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: '1rem', color: '#8B9ED9', marginBottom: '0.1rem', wordBreak: 'break-word' }}>{trip.hotel.price_per_night}<span style={{ fontSize: '0.7rem', fontWeight: 400, color: 'var(--dark-mid)' }}>/night</span></p>
                           <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.74rem', color: 'var(--dark-mid)', marginBottom: '0.7rem' }}>{trip.hotel.total_hotel}</p>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                            {trip.hotel.booking_links.map((link, i) => (
-                              <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"
-                                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.38rem 0.75rem', borderRadius: 100, fontFamily: 'var(--font-body)', fontSize: '0.74rem', fontWeight: 500, textDecoration: 'none', transition: 'all 0.15s', background: i === 0 ? '#8B9ED9' : 'transparent', color: i === 0 ? 'white' : '#8B9ED9', border: '1.5px solid #8B9ED9', width: 'fit-content' }}
-                                onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.opacity = '0.85' }}
-                                onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.opacity = '1' }}
-                              ><ExternalLink size={10} />{link.label}</a>
-                            ))}
+                            {trip.hotel.booking_links.map((link, i) => <BookLink key={i} link={link} i={i} color="#8B9ED9" />)}
                           </div>
                         </div>
                       </div>
 
-                      {/* Why it fits + tip */}
                       <div style={{ padding: '0.9rem 1.4rem' }}>
                         <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.85rem', color: 'var(--dark)', fontWeight: 500, lineHeight: 1.6, marginBottom: '0.3rem' }}>{trip.why_fits}</p>
                         <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.8rem', color: 'var(--dark-mid)', fontStyle: 'italic', lineHeight: 1.6, margin: 0 }}>💡 {trip.insider_tip}</p>
@@ -305,7 +279,6 @@ export default function ToolModal({ tool, onClose }: Props) {
               </div>
             )}
 
-            {/* Pro tip */}
             {result.pro_tip && (
               <div style={{ background: 'var(--cream)', border: '1.5px solid var(--peach)', borderRadius: 12, padding: '1rem 1.25rem', display: 'flex', gap: '0.75rem', alignItems: 'flex-start', marginBottom: '1rem' }}>
                 <Zap size={16} color={tool.accentColor} style={{ flexShrink: 0, marginTop: '0.1rem' }} />
