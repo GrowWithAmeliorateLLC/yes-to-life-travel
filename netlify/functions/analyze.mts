@@ -11,7 +11,7 @@ export default async (req: Request, context: Context) => {
   const apiKey = Netlify.env.get("ANTHROPIC_API_KEY");
   if (!apiKey) {
     return new Response(
-      JSON.stringify({ message: "API key not configured. Please add ANTHROPIC_API_KEY to your Netlify environment variables." }),
+      JSON.stringify({ message: "API key not configured." }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
@@ -34,7 +34,6 @@ export default async (req: Request, context: Context) => {
     });
   }
 
-  // Stream the Anthropic response and collect it, with a generous timeout
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 25000);
 
@@ -49,8 +48,8 @@ export default async (req: Request, context: Context) => {
       signal: controller.signal,
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 1500,
-        system: `You are a Yes To Life Travel deal specialist. Your job is to find the best possible travel deals and make it easy for people to say yes to their dream trip. Be specific, practical, and direct. Use clear ## section headers. Skip preamble — go straight into the intelligence. Keep each section tight and actionable.`,
+        max_tokens: 2000,
+        system: `You are a Yes To Life Travel deal specialist. You MUST respond with ONLY a valid JSON object — no markdown, no backticks, no explanation before or after. Pure JSON only. Your job is to surface the 3-5 best bookable deals for the trip requested. Every deal must include real booking URLs.`,
         messages: [
           { role: "user", content: prompt },
         ],
@@ -82,7 +81,7 @@ export default async (req: Request, context: Context) => {
     return new Response(
       JSON.stringify({
         message: isTimeout
-          ? "Analysis took too long to complete. Try shortening your request or being more specific."
+          ? "Analysis took too long. Try being more specific about your dates and route."
           : err?.message || "Internal server error",
       }),
       { status: isTimeout ? 504 : 500, headers: { "Content-Type": "application/json" } }
