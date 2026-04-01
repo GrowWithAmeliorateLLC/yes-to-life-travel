@@ -23,7 +23,7 @@ export interface Field {
   optional?: boolean
 }
 
-// Pre-build reliable booking URLs from user inputs — never rely on Claude to invent deep links
+// Pre-build reliable booking URLs from user inputs — Claude is told to use ONLY these
 function gFlights(origin: string, destination?: string) {
   const q = destination
     ? encodeURIComponent(`Flights from ${origin} to ${destination}`)
@@ -59,24 +59,24 @@ const tools: Tool[] = [
     ],
     buildPrompt: (v) => {
       const flightsUrl = gFlights(v.origin)
-      return `Find 3-5 complete trip packages within this budget. Return ONLY valid JSON — no markdown, no backticks, no explanation before or after.
+      return `Find 3-5 complete trip packages within this budget. Return ONLY valid JSON — no markdown, no backticks, no text before or after the JSON.
 
-TRIP DETAILS:
+TRIP:
 - Flying from: ${v.origin}
 - Dates: ${v.dates}
 - Budget: ${v.budget} per person (flights + hotel combined)
 - Travelers: ${v.travelers}
 - Vibe: ${v.vibe || 'open to anything'}
 
-URL RULES — use ONLY these exact URLs, never invent your own:
-- All flight search links: ${flightsUrl}
+CRITICAL URL RULES — only use these exact URLs, never make up your own:
+- All Google Flights links: ${flightsUrl}
 - Airlines: ${AIRLINES}
-- Hotel brands: ${HOTEL_BRANDS}
-- Booking.com: https://www.booking.com/searchresults.html?ss=CITY_NAME
+- Hotels: ${HOTEL_BRANDS}
+- Booking.com: https://www.booking.com/searchresults.html?ss=CITYNAME
 
-Return this JSON structure exactly:
+JSON structure (return this exactly):
 {
-  "summary": "1-2 sentences on destinations considered and why they fit the budget",
+  "summary": "1-2 sentences on what destinations fit and why",
   "trips": [
     {
       "rank": 1,
@@ -84,36 +84,36 @@ Return this JSON structure exactly:
       "destination": "City, Country",
       "country_emoji": "🏖",
       "vibe": "short evocative description",
-      "total_per_person": "$X,XXX",
+      "total_per_person": "$1,850",
       "nights": 7,
       "flight": {
         "carrier": "Airline Name",
         "route": "CLT → LIS",
-        "price_per_person": "$XXX roundtrip",
+        "price_per_person": "$650 roundtrip",
         "booking_links": [
           { "label": "Search Google Flights", "url": "${flightsUrl}" },
-          { "label": "Book on [Airline]", "url": "https://www.airlinesite.com" }
+          { "label": "Book on TAP", "url": "https://www.tapairportugal.com" }
         ]
       },
       "hotel": {
         "name": "Hotel Name",
         "stars": 4,
         "area": "Neighborhood",
-        "price_per_night": "$XXX",
-        "total_hotel": "$X,XXX for N nights",
+        "price_per_night": "$165",
+        "total_hotel": "$1,155 for 7 nights",
         "booking_links": [
-          { "label": "Book Direct", "url": "https://www.hotelsite.com" },
-          { "label": "Search Booking.com", "url": "https://www.booking.com/searchresults.html?ss=CITY" }
+          { "label": "Book Direct", "url": "https://www.hotelwebsite.com" },
+          { "label": "Search Booking.com", "url": "https://www.booking.com/searchresults.html?ss=Lisbon" }
         ]
       },
       "why_fits": "One sentence why this fits the budget",
-      "insider_tip": "One specific money-saving tip"
+      "insider_tip": "One money-saving tip"
     }
   ],
-  "pro_tip": "One overall insight for these travel dates"
+  "pro_tip": "One overall insight for these dates"
 }
-Badge options: Best Overall Value, Biggest Surprise, Most Adventurous, Best Beach, Best City Break, Hidden Gem, Best Food Scene, Best Value Luxury, Family Favorite
-Include 3-5 diverse destinations. Do NOT invent URLs — only use the ones specified above.`
+Badges: Best Overall Value, Biggest Surprise, Most Adventurous, Best Beach, Best City Break, Hidden Gem, Best Food Scene, Best Value Luxury, Family Favorite
+Return 3-5 diverse destinations. ONLY use the URLs listed above.`
     }
   },
   {
@@ -134,20 +134,20 @@ Include 3-5 diverse destinations. Do NOT invent URLs — only use the ones speci
     ],
     buildPrompt: (v) => {
       const searchUrl = gFlights(v.origin, v.destination)
-      return `Find the 3-5 best bookable flight deals for this trip. Return ONLY valid JSON — no markdown, no backticks, no explanation.
+      return `Find the 3-5 best bookable flight deals. Return ONLY valid JSON — no markdown, no backticks, no text before or after.
 
-TRIP DETAILS:
+TRIP:
 - From: ${v.origin}
 - To: ${v.destination}
 - Dates: ${v.dates}
 - Travelers: ${v.travelers}
-- Programs: ${v.programs || 'none specified'}
+- Programs: ${v.programs || 'none'}
 
-URL RULES — use ONLY these, never invent deep links:
-- Google Flights (use for ALL flight search links): ${searchUrl}
+CRITICAL URL RULES — only use these, never invent deep links:
+- Google Flights (use for ALL flight links): ${searchUrl}
 - Airlines: ${AIRLINES}
 
-Return this JSON exactly:
+JSON structure:
 {
   "summary": "1-2 sentences of context about this route and timing",
   "deals": [
@@ -158,18 +158,18 @@ Return this JSON exactly:
       "price_range": "$XXX–XXX per person",
       "route": "CLT → FRA → MXP",
       "timing": "Departs Dec 22, ~14h total",
-      "why_best": "One punchy sentence on why this tops the list",
-      "unique_angle": "The specific trick — codeshare, foreign market, award angle, etc.",
+      "why_best": "One punchy sentence",
+      "unique_angle": "The specific trick — codeshare, foreign market, award angle",
       "booking_links": [
         { "label": "Search Google Flights", "url": "${searchUrl}" },
-        { "label": "Book on [Airline]", "url": "https://www.airline.com" }
+        { "label": "Book on United", "url": "https://www.united.com" }
       ]
     }
   ],
-  "pro_tip": "One actionable tip to save more or get an upgrade"
+  "pro_tip": "One actionable tip"
 }
-Badge options: Best Value, Award Sweet Spot, Budget Pick, Miles Winner, Hidden Gem, Direct Route, Family Pick
-Include 3-5 deals. Only use the Google Flights URL provided above.`
+Badges: Best Value, Award Sweet Spot, Budget Pick, Miles Winner, Hidden Gem, Direct Route, Family Pick
+Return 3-5 deals. ONLY use the Google Flights URL above.`
     }
   },
   {
@@ -189,21 +189,21 @@ Include 3-5 deals. Only use the Google Flights URL provided above.`
     ],
     buildPrompt: (v) => {
       const bookingUrl = bCom(v.destination)
-      const googleHotelsLink = gHotels(v.destination)
-      return `Find the 3-5 best bookable hotel deals for this stay. Return ONLY valid JSON — no markdown, no backticks, no explanation.
+      const hotelsUrl = gHotels(v.destination)
+      return `Find the 3-5 best bookable hotel deals. Return ONLY valid JSON — no markdown, no backticks, no text before or after.
 
-STAY DETAILS:
+STAY:
 - Destination: ${v.destination}
 - Dates: ${v.dates}
-- Preferences: ${v.preferences || '4–5 star, good location, best value'}
-- Programs: ${v.programs || 'none specified'}
+- Preferences: ${v.preferences || '4–5 star, great location, best value'}
+- Programs: ${v.programs || 'none'}
 
-URL RULES — use ONLY these, never invent deep links:
-- Booking.com search: ${bookingUrl}
-- Google Hotels: ${googleHotelsLink}
+CRITICAL URL RULES — only use these, never invent deep links:
+- Booking.com: ${bookingUrl}
+- Google Hotels: ${hotelsUrl}
 - Hotel brands: ${HOTEL_BRANDS}
 
-Return this JSON exactly:
+JSON structure:
 {
   "summary": "1-2 sentences of context about this destination and timing",
   "deals": [
@@ -214,8 +214,8 @@ Return this JSON exactly:
       "stars": 5,
       "price_range": "$XXX/night",
       "strategy": "How to get this price (max 8 words)",
-      "why_best": "One punchy sentence on why this tops the list",
-      "unique_angle": "The specific angle — unpublished rate, points sweet spot, rate parity gap, etc.",
+      "why_best": "One punchy sentence",
+      "unique_angle": "The specific angle — unpublished rate, points sweet spot, rate parity gap",
       "booking_links": [
         { "label": "Book Direct", "url": "https://www.hotelbrand.com" },
         { "label": "Search Booking.com", "url": "${bookingUrl}" }
@@ -224,8 +224,8 @@ Return this JSON exactly:
   ],
   "pro_tip": "One specific actionable tip"
 }
-Badge options: Best Deal, Points Sweet Spot, Call Direct, Flash Sale, Boutique Pick, Best Views, Family Pick, Adults Only
-Include 3-5 properties. Keep strategy SHORT. Only use the URLs specified above.`
+Badges: Best Deal, Points Sweet Spot, Call Direct, Flash Sale, Boutique Pick, Best Views, Family Pick, Adults Only
+Return 3-5 properties. Strategy field max 8 words. ONLY use the URLs above.`
     }
   },
 ]
@@ -244,7 +244,6 @@ const marqueeItems = [
 
 export default function App() {
   const [activeTool, setActiveTool] = useState<Tool | null>(null)
-
   return (
     <div style={{ minHeight: '100vh', background: 'var(--cream)' }}>
       <header style={{ padding: '1.25rem 2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(250,245,238,0.95)', backdropFilter: 'blur(16px)', borderBottom: '1px solid var(--pink-soft)' }}>
@@ -253,15 +252,11 @@ export default function App() {
       </header>
 
       <section style={{ position: 'relative', overflow: 'hidden', padding: '5.5rem 2rem 5rem', textAlign: 'center', background: 'var(--coral)' }}>
-        <div className="blob blob-1" />
-        <div className="blob blob-2" />
-        <div className="blob blob-3" />
+        <div className="blob blob-1" /><div className="blob blob-2" /><div className="blob blob-3" />
         <div style={{ position: 'absolute', top: '2rem', right: '2.5rem', width: 90, height: 90 }}>
           <svg className="spinning-badge" viewBox="0 0 90 90" width="90" height="90">
             <defs><path id="circle" d="M 45,45 m -32,0 a 32,32 0 1,1 64,0 a 32,32 0 1,1 -64,0" /></defs>
-            <text style={{ fontSize: 10.5, fill: 'rgba(255,255,255,0.85)', fontFamily: 'var(--font-hand)', fontWeight: 600, letterSpacing: 2.5 }}>
-              <textPath href="#circle">SAY YES · TO LIFE · TO TRAVEL · </textPath>
-            </text>
+            <text style={{ fontSize: 10.5, fill: 'rgba(255,255,255,0.85)', fontFamily: 'var(--font-hand)', fontWeight: 600, letterSpacing: 2.5 }}><textPath href="#circle">SAY YES · TO LIFE · TO TRAVEL · </textPath></text>
             <circle cx="45" cy="45" r="14" fill="rgba(255,255,255,0.15)" />
             <text x="45" y="50" textAnchor="middle" style={{ fontSize: 16, fill: 'white', fontFamily: 'var(--font-body)' }}>✈</text>
           </svg>
@@ -294,8 +289,7 @@ export default function App() {
         <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
           <span style={{ fontFamily: 'var(--font-hand)', fontSize: '1.1rem', fontWeight: 600, color: 'var(--coral)', display: 'block', marginBottom: '0.5rem' }}>where are you dreaming of going?</span>
           <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 'clamp(2rem, 4vw, 3rem)', color: 'var(--dark)', lineHeight: 1.15 }}>
-            Tell us your trip.<br />
-            <em style={{ fontStyle: 'italic', color: 'var(--coral)', fontWeight: 700 }}>We'll find the way to make it happen.</em>
+            Tell us your trip.<br /><em style={{ fontStyle: 'italic', color: 'var(--coral)', fontWeight: 700 }}>We'll find the way to make it happen.</em>
           </h2>
         </div>
 
@@ -353,9 +347,7 @@ function RandomizerCard({ tool, onClick }: { tool: Tool; onClick: () => void }) 
     >
       <div style={{ position: 'absolute', right: '1.5rem', top: '50%', transform: 'translateY(-50%)', fontSize: '7rem', opacity: hovered ? 0.08 : 0.04, transition: 'opacity 0.25s', pointerEvents: 'none', userSelect: 'none' }}>🎲</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexShrink: 0 }}>
-        <div style={{ width: 64, height: 64, background: hovered ? tool.accentColor : 'var(--blush)', borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', color: hovered ? 'white' : tool.accentColor, transition: 'all 0.25s', border: `2px solid ${hovered ? tool.accentColor : 'var(--pink-soft)'}`, boxShadow: hovered ? `0 6px 20px ${tool.accentColor}44` : 'none', flexShrink: 0 }}>
-          {tool.icon}
-        </div>
+        <div style={{ width: 64, height: 64, background: hovered ? tool.accentColor : 'var(--blush)', borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', color: hovered ? 'white' : tool.accentColor, transition: 'all 0.25s', border: `2px solid ${hovered ? tool.accentColor : 'var(--pink-soft)'}`, boxShadow: hovered ? `0 6px 20px ${tool.accentColor}44` : 'none', flexShrink: 0 }}>{tool.icon}</div>
         <div>
           <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: '2rem', color: 'var(--dark)', lineHeight: 1.05, marginBottom: '0.2rem' }}>{tool.title}</h3>
           <p style={{ fontFamily: 'var(--font-hand)', fontWeight: 600, fontSize: '1rem', color: hovered ? tool.accentColor : 'var(--dark-mid)', transition: 'color 0.25s', margin: 0 }}>{tool.subtitle}</p>
@@ -380,9 +372,7 @@ function ToolCard({ tool, onClick }: { tool: Tool; onClick: () => void }) {
     <button onClick={onClick} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
       style={{ background: hovered ? tool.bgColor : 'var(--white)', border: `2.5px solid ${hovered ? tool.accentColor : 'var(--pink-soft)'}`, borderRadius: 20, cursor: 'pointer', padding: '2.25rem', textAlign: 'left', width: '100%', position: 'relative', overflow: 'hidden', transition: 'all 0.25s ease', boxShadow: hovered ? `0 16px 48px ${tool.accentColor}22` : '0 2px 12px rgba(44,31,26,0.05)', transform: hovered ? 'translateY(-4px)' : 'none' }}
     >
-      <div style={{ position: 'absolute', bottom: '-1rem', right: '-0.5rem', fontSize: '8rem', opacity: hovered ? 0.07 : 0.04, transition: 'opacity 0.25s', pointerEvents: 'none', lineHeight: 1, color: tool.accentColor, userSelect: 'none' }}>
-        {tool.id === 'flights' ? '✈' : '⌂'}
-      </div>
+      <div style={{ position: 'absolute', bottom: '-1rem', right: '-0.5rem', fontSize: '8rem', opacity: hovered ? 0.07 : 0.04, transition: 'opacity 0.25s', pointerEvents: 'none', lineHeight: 1, color: tool.accentColor, userSelect: 'none' }}>{tool.id === 'flights' ? '✈' : '⌂'}</div>
       <div style={{ width: 56, height: 56, background: hovered ? tool.accentColor : 'var(--blush)', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', color: hovered ? 'white' : tool.accentColor, marginBottom: '1.25rem', transition: 'all 0.25s', border: `2px solid ${hovered ? tool.accentColor : 'var(--pink-soft)'}`, boxShadow: hovered ? `0 6px 20px ${tool.accentColor}44` : 'none' }}>{tool.icon}</div>
       <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: '1.6rem', color: 'var(--dark)', lineHeight: 1.1, marginBottom: '0.25rem' }}>{tool.title}</h3>
       <p style={{ fontFamily: 'var(--font-hand)', fontWeight: 600, fontSize: '0.95rem', color: hovered ? tool.accentColor : 'var(--dark-mid)', marginBottom: '0.5rem', transition: 'color 0.25s' }}>{tool.subtitle}</p>
