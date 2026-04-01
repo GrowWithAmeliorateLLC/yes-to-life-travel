@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import {
   Plane, Calendar, MapPin, Globe, Award,
-  Search, Route, Hotel, ArrowRight, Sparkles
+  Search, Route, Hotel, ArrowRight
 } from 'lucide-react'
 import ToolModal from './components/ToolModal'
 
@@ -28,11 +28,11 @@ const tools: Tool[] = [
   {
     id: 'carrier',
     number: '01',
-    icon: <Plane size={22} />,
+    icon: <Plane size={20} />,
     title: 'Carrier Intelligence',
     subtitle: 'Extractor',
     description: 'Uncover every operator on your route — regional carriers, charter services, wet leases, and codeshare combinations that never appear on comparison platforms.',
-    accentColor: '#c9a84c',
+    accentColor: '#E8523A',
     fields: [
       { key: 'origin', label: 'Origin Airport / City', placeholder: 'e.g. New York (JFK/LGA/EWR)' },
       { key: 'destination', label: 'Destination Airport / City', placeholder: 'e.g. London (LHR/LGW/STN)' },
@@ -42,11 +42,11 @@ const tools: Tool[] = [
   {
     id: 'calendar',
     number: '02',
-    icon: <Calendar size={22} />,
+    icon: <Calendar size={20} />,
     title: 'Calendar Vulnerability',
     subtitle: 'Scanner',
     description: 'Identify dates where airline pricing models produce outputs below intended levels due to demand forecasting errors and inventory management decisions.',
-    accentColor: '#7eb5c8',
+    accentColor: '#8B9ED9',
     fields: [
       { key: 'route', label: 'Route', placeholder: 'e.g. JFK to LHR or New York to London' },
       { key: 'window', label: 'Travel Window', placeholder: 'e.g. June 1 to August 31, 2025' },
@@ -56,11 +56,11 @@ const tools: Tool[] = [
   {
     id: 'ground',
     number: '03',
-    icon: <MapPin size={22} />,
+    icon: <MapPin size={20} />,
     title: 'Ground Cost',
     subtitle: 'Eliminator',
     description: 'Calculate the true door-to-door cost of every airport combination, exposing ground transport costs that transform apparent deals into expensive journeys.',
-    accentColor: '#8fba8f',
+    accentColor: '#8A8A3C',
     fields: [
       { key: 'originCity', label: 'Origin City', placeholder: 'e.g. Los Angeles, CA' },
       { key: 'destCity', label: 'Destination City', placeholder: 'e.g. Paris, France' },
@@ -71,11 +71,11 @@ const tools: Tool[] = [
   {
     id: 'foreign',
     number: '04',
-    icon: <Globe size={22} />,
+    icon: <Globe size={20} />,
     title: 'Foreign Market',
     subtitle: 'Price Hunter',
     description: 'Exploit pricing arbitrage across national markets — identical seats on identical flights sold at dramatically lower prices through foreign booking portals.',
-    accentColor: '#c47eb5',
+    accentColor: '#F4A882',
     fields: [
       { key: 'airline', label: 'Airline', placeholder: 'e.g. British Airways, Emirates' },
       { key: 'route', label: 'Route', placeholder: 'e.g. JFK to LHR' },
@@ -86,25 +86,25 @@ const tools: Tool[] = [
   {
     id: 'award',
     number: '05',
-    icon: <Award size={22} />,
+    icon: <Award size={20} />,
     title: 'Award Space',
     subtitle: 'Intelligence System',
     description: 'Access business and first class seats through frequent flyer programs on routes most travelers assume are impossible — including partner redemptions and transfer windows.',
-    accentColor: '#c99a4c',
+    accentColor: '#E8523A',
     fields: [
       { key: 'route', label: 'Route', placeholder: 'e.g. New York to Tokyo' },
-      { key: 'programs', label: 'My Loyalty Programs', placeholder: 'e.g. Chase Ultimate Rewards, Amex MR, United MileagePlus, Delta SkyMiles' },
+      { key: 'programs', label: 'My Loyalty Programs', placeholder: 'e.g. Chase Ultimate Rewards, Amex MR, United MileagePlus' },
     ],
     buildPrompt: (v) => `Act as an award availability specialist who has accessed business and first class seats through frequent flyer programs on routes most travelers assume are impossible with miles. Build my complete award intelligence system for ${v.route} using my programs: ${v.programs}. Identify every partner redemption opportunity, every transfer pathway, and specific calendar windows where premium award space consistently opens up before it disappears.\n\nMy route: ${v.route}\nMy programs: ${v.programs}\n\nProvide: direct program award options with rates, partner airline redemption opportunities, transfer partner pathways with ratios, sweet spot redemption rates, best cabin class value options, specific booking windows (days before departure when space opens), search tools to use, and a priority action list ranked by value.`
   },
   {
     id: 'forensics',
     number: '06',
-    icon: <Search size={22} />,
+    icon: <Search size={20} />,
     title: 'True Cost',
     subtitle: 'Forensics Report',
     description: 'Surface every hidden charge that transforms a cheap fare into an expensive journey — from booking through landing, nothing stays hidden.',
-    accentColor: '#c47a5a',
+    accentColor: '#8B9ED9',
     fields: [
       { key: 'itinerary', label: 'Itinerary', placeholder: 'e.g. Spirit Airlines JFK to LAX, July 15, Basic Economy, 1 checked bag, return July 22', multiline: true },
     ],
@@ -113,11 +113,11 @@ const tools: Tool[] = [
   {
     id: 'sequencer',
     number: '07',
-    icon: <Route size={22} />,
+    icon: <Route size={20} />,
     title: 'Optimal Decision',
     subtitle: 'Sequencer',
     description: 'The precise order of booking actions that consistently produces the lowest total trip cost — what to monitor daily and the exact signal that the window is closing.',
-    accentColor: '#7e9ec4',
+    accentColor: '#8A8A3C',
     fields: [
       { key: 'trip', label: 'Upcoming Trip Details', placeholder: 'e.g. Family trip to Paris, 2 adults 1 child, business class preferred, flexible on dates', multiline: true },
       { key: 'dates', label: 'Target Travel Dates', placeholder: 'e.g. Targeting late September 2025, 10-day trip' },
@@ -127,164 +127,285 @@ const tools: Tool[] = [
   {
     id: 'hotels',
     number: '08',
-    icon: <Hotel size={22} />,
+    icon: <Hotel size={20} />,
     title: 'Luxury Deal',
     subtitle: 'Hunter',
     description: 'Uncover deal and sale prices on 4 and 5-star resorts and hotels — flash sales, unpublished rates, points redemptions, and negotiated rates most travelers never see.',
-    accentColor: '#9c8fc4',
+    accentColor: '#F4A882',
     fields: [
       { key: 'destination', label: 'Destination', placeholder: 'e.g. Maldives, Bali, Paris' },
       { key: 'dates', label: 'Stay Dates', placeholder: 'e.g. August 10-20, 2025' },
       { key: 'preferences', label: 'Preferences', placeholder: 'e.g. Overwater bungalow, adults-only, beach access, flexible on exact location', multiline: true },
     ],
-    buildPrompt: (v) => `Act as a luxury hotel deal specialist who has accessed 4 and 5-star resort deals, unpublished rates, and flash sales that most travelers never discover. Find every deal and sale price on premium accommodations in ${v.destination} for ${v.dates} with preferences: ${v.preferences}.\n\nDestination: ${v.destination}\nDates: ${v.dates}\nPreferences: ${v.preferences}\n\nProvide: (1) Current or upcoming flash sales at 4-5 star properties, (2) Best points redemption opportunities — which programs, which properties, redemption rates, (3) Unpublished rate strategies — calling direct, corporate rates, AAA, AARP, (4) Rate parity violations — booking direct vs. OTA price differences, (5) Best value properties that punch above their price point, (6) Package deals that bundle flights and hotel for better combined value, (7) Shoulder season windows where luxury becomes affordable, (8) Top 5 specific property recommendations with current best rate strategy for each.`
+    buildPrompt: (v) => `Act as a luxury hotel deal specialist who has accessed 4 and 5-star resort deals, unpublished rates, and flash sales that most travelers never discover. Find every deal and sale price on premium accommodations in ${v.destination} for ${v.dates} with preferences: ${v.preferences}.\n\nDestination: ${v.destination}\nDates: ${v.dates}\nPreferences: ${v.preferences}\n\nProvide: (1) Current or upcoming flash sales at 4-5 star properties, (2) Best points redemption opportunities, (3) Unpublished rate strategies — calling direct, corporate rates, AAA, AARP, (4) Rate parity violations — booking direct vs. OTA price differences, (5) Best value properties that punch above their price point, (6) Package deals that bundle flights and hotel for better combined value, (7) Shoulder season windows where luxury becomes affordable, (8) Top 5 specific property recommendations with current best rate strategy for each.`
   }
+]
+
+const marqueeItems = [
+  '✈ Carrier Intelligence', '🗓 Calendar Scanning', '🗺 Ground Cost Analysis',
+  '🌍 Foreign Market Arbitrage', '🏆 Award Space', '🔍 True Cost Forensics',
+  '📋 Decision Sequencing', '🏨 Luxury Deal Hunting', '✈ Carrier Intelligence',
+  '🗓 Calendar Scanning', '🗺 Ground Cost Analysis', '🌍 Foreign Market Arbitrage',
+  '🏆 Award Space', '🔍 True Cost Forensics', '📋 Decision Sequencing', '🏨 Luxury Deal Hunting',
 ]
 
 export default function App() {
   const [activeTool, setActiveTool] = useState<Tool | null>(null)
 
   return (
-    <div style={{ minHeight: '100vh' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--cream)' }}>
+
+      {/* Header */}
       <header style={{
-        borderBottom: '1px solid var(--border)',
-        padding: '1.5rem 2rem',
+        padding: '1.25rem 2rem',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         position: 'sticky',
         top: 0,
         zIndex: 50,
-        background: 'rgba(10, 9, 8, 0.92)',
-        backdropFilter: 'blur(20px)',
+        background: 'rgba(250,245,238,0.92)',
+        backdropFilter: 'blur(16px)',
+        borderBottom: '1px solid var(--pink-soft)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{
-            width: 36, height: 36,
-            background: 'linear-gradient(135deg, var(--gold-dim), var(--gold))',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <span style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 400, color: '#0a0908' }}>Y</span>
-          </div>
-          <div>
-            <div style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: '1.4rem',
-              fontWeight: 400,
-              letterSpacing: '0.15em',
-              color: 'var(--cream)',
-              lineHeight: 1,
-            }}>Yes To Life Travel</div>
-            <div style={{ fontSize: '0.6rem', letterSpacing: '0.2em', color: 'var(--gold-dim)', textTransform: 'uppercase' }}>
-              Elite Travel Intelligence
-            </div>
-          </div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--muted)', fontSize: '0.75rem', letterSpacing: '0.1em' }}>
-          <Sparkles size={12} color="var(--gold-dim)" />
-          <span>Powered by Claude AI</span>
+        <LogoWordmark />
+        <div style={{
+          fontFamily: 'var(--font-hand)',
+          fontSize: '1rem',
+          fontWeight: 600,
+          color: 'var(--coral)',
+          letterSpacing: '0.02em',
+        }}>
+          8 intelligence systems
         </div>
       </header>
 
+      {/* Hero Section */}
       <section style={{
+        position: 'relative',
+        overflow: 'hidden',
         padding: '5rem 2rem 4rem',
-        maxWidth: 900,
-        margin: '0 auto',
         textAlign: 'center',
-        animation: 'fadeUp 0.8s ease both',
+        background: 'var(--coral)',
       }}>
+        {/* Blobs */}
+        <div className="blob blob-1" />
+        <div className="blob blob-2" />
+        <div className="blob blob-3" />
+
+        {/* Spinning badge */}
         <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-          padding: '0.35rem 1rem',
-          border: '1px solid var(--gold-dim)',
-          borderRadius: 100,
-          fontSize: '0.7rem',
-          letterSpacing: '0.2em',
-          color: 'var(--gold)',
-          textTransform: 'uppercase',
-          marginBottom: '2rem',
+          position: 'absolute',
+          top: '2rem',
+          right: '2.5rem',
+          width: 90, height: 90,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--gold)', display: 'inline-block' }} />
-          8 Intelligence Systems
+          <svg className="spinning-badge" viewBox="0 0 90 90" width="90" height="90">
+            <defs>
+              <path id="circle" d="M 45,45 m -32,0 a 32,32 0 1,1 64,0 a 32,32 0 1,1 -64,0" />
+            </defs>
+            <text style={{ fontSize: 11, fill: 'rgba(255,255,255,0.85)', fontFamily: 'var(--font-hand)', fontWeight: 600, letterSpacing: 3 }}>
+              <textPath href="#circle">AI-POWERED · TRAVEL · INTELLIGENCE · </textPath>
+            </text>
+            <circle cx="45" cy="45" r="14" fill="rgba(255,255,255,0.15)" />
+            <text x="45" y="49" textAnchor="middle" style={{ fontSize: 12, fill: 'white', fontFamily: 'var(--font-body)' }}>✈</text>
+          </svg>
         </div>
-        <h1 style={{
-          fontFamily: 'var(--font-display)',
-          fontSize: 'clamp(2.5rem, 6vw, 4.5rem)',
-          fontWeight: 300,
-          lineHeight: 1.1,
-          color: 'var(--cream)',
-          marginBottom: '1.5rem',
-          letterSpacing: '0.02em',
-        }}>
-          Travel at the<br />
-          <em style={{ color: 'var(--gold)', fontStyle: 'italic' }}>intelligence level</em>
-          <br />of industry insiders
-        </h1>
-        <p style={{
-          color: 'var(--muted)',
-          maxWidth: 520,
-          margin: '0 auto',
-          fontSize: '0.95rem',
-          lineHeight: 1.8,
-        }}>
-          Eight AI-powered systems that extract market intelligence, expose hidden costs, and sequence your booking decisions for maximum value.
-        </p>
+
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <p style={{
+            fontFamily: 'var(--font-hand)',
+            fontSize: '1.15rem',
+            fontWeight: 600,
+            color: 'rgba(255,255,255,0.85)',
+            marginBottom: '1rem',
+            letterSpacing: '0.03em',
+          }}>
+            stop overpaying. start traveling smarter.
+          </p>
+          <h1 style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 'clamp(2.8rem, 7vw, 5.5rem)',
+            fontWeight: 900,
+            lineHeight: 1.05,
+            color: 'var(--white)',
+            marginBottom: '1.5rem',
+            letterSpacing: '-0.01em',
+          }}>
+            Travel at the level<br />
+            <em style={{ fontStyle: 'italic', color: 'var(--peach)' }}>insiders don't share.</em>
+          </h1>
+          <p style={{
+            color: 'rgba(255,255,255,0.8)',
+            maxWidth: 500,
+            margin: '0 auto 2.5rem',
+            fontSize: '1rem',
+            lineHeight: 1.75,
+            fontWeight: 300,
+          }}>
+            Eight AI-powered intelligence systems that expose hidden costs, find real deals, and sequence every booking decision for maximum value.
+          </p>
+          <button
+            onClick={() => document.getElementById('tools')?.scrollIntoView({ behavior: 'smooth' })}
+            style={{
+              background: 'var(--white)',
+              color: 'var(--coral)',
+              border: 'none',
+              padding: '0.9rem 2.2rem',
+              fontFamily: 'var(--font-display)',
+              fontWeight: 700,
+              fontSize: '1rem',
+              cursor: 'pointer',
+              borderRadius: 100,
+              letterSpacing: '0.01em',
+              transition: 'transform 0.2s, box-shadow 0.2s',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 28px rgba(0,0,0,0.2)' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'none'; (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 20px rgba(0,0,0,0.15)' }}
+          >
+            Start Exploring →
+          </button>
+        </div>
       </section>
 
+      {/* Marquee strip */}
       <div style={{
-        maxWidth: 900,
-        margin: '0 auto 3rem',
-        padding: '0 2rem',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '1rem',
+        background: 'var(--dark)',
+        color: 'var(--peach)',
+        padding: '0.65rem 0',
+        overflow: 'hidden',
+        borderTop: '2px solid var(--coral)',
+        borderBottom: '2px solid var(--coral)',
       }}>
-        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, var(--border2))' }} />
-        <div style={{ width: 4, height: 4, background: 'var(--gold-dim)', borderRadius: '50%' }} />
-        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, var(--border2))' }} />
+        <div className="marquee-track">
+          {marqueeItems.map((item, i) => (
+            <span key={i} style={{
+              fontFamily: 'var(--font-hand)',
+              fontWeight: 600,
+              fontSize: '0.95rem',
+              marginRight: '2.5rem',
+              whiteSpace: 'nowrap',
+              letterSpacing: '0.03em',
+            }}>{item}</span>
+          ))}
+        </div>
       </div>
 
-      <main style={{
-        maxWidth: 1100,
-        margin: '0 auto',
-        padding: '0 2rem 6rem',
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-        gap: '1px',
-        background: 'var(--border)',
-        border: '1px solid var(--border)',
-      }}>
-        {tools.map((tool, i) => (
-          <ToolCard
-            key={tool.id}
-            tool={tool}
-            index={i}
-            onClick={() => setActiveTool(tool)}
-          />
-        ))}
+      {/* Tools Grid */}
+      <main id="tools" style={{ padding: '4rem 2rem 6rem', maxWidth: 1140, margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+          <span style={{
+            fontFamily: 'var(--font-hand)',
+            fontSize: '1.1rem',
+            fontWeight: 600,
+            color: 'var(--coral)',
+            display: 'block',
+            marginBottom: '0.5rem',
+          }}>choose your weapon</span>
+          <h2 style={{
+            fontFamily: 'var(--font-display)',
+            fontWeight: 900,
+            fontSize: 'clamp(1.8rem, 4vw, 2.8rem)',
+            color: 'var(--dark)',
+            lineHeight: 1.15,
+          }}>
+            8 Intelligence Systems
+          </h2>
+        </div>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+          gap: '1.25rem',
+        }}>
+          {tools.map((tool, i) => (
+            <ToolCard key={tool.id} tool={tool} index={i} onClick={() => setActiveTool(tool)} />
+          ))}
+        </div>
       </main>
 
+      {/* Footer */}
       <footer style={{
-        borderTop: '1px solid var(--border)',
-        padding: '2rem',
+        background: 'var(--dark)',
+        color: 'var(--pink-soft)',
+        padding: '2.5rem 2rem',
         textAlign: 'center',
-        color: 'var(--muted)',
-        fontSize: '0.75rem',
-        letterSpacing: '0.1em',
+        borderTop: '3px solid var(--coral)',
       }}>
-        <span style={{ fontFamily: 'var(--font-display)', color: 'var(--gold-dim)', marginRight: '0.5rem' }}>Yes To Life Travel</span>
-        Elite Travel Intelligence · Powered by Claude AI
+        <LogoWordmarkLight />
+        <p style={{
+          fontFamily: 'var(--font-body)',
+          fontSize: '0.8rem',
+          color: 'var(--dark-mid)',
+          marginTop: '0.75rem',
+          color: 'rgba(240,202,188,0.5)',
+        }}>
+          Powered by Claude AI · Elite Travel Intelligence
+        </p>
       </footer>
 
-      {activeTool && (
-        <ToolModal tool={activeTool} onClose={() => setActiveTool(null)} />
-      )}
+      {activeTool && <ToolModal tool={activeTool} onClose={() => setActiveTool(null)} />}
     </div>
+  )
+}
+
+function LogoWordmark() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      <div style={{
+        width: 36, height: 36,
+        background: 'var(--coral)',
+        borderRadius: '50%',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexShrink: 0,
+      }}>
+        <span style={{ color: 'white', fontSize: '1rem' }}>✈</span>
+      </div>
+      <span style={{
+        fontFamily: 'var(--font-display)',
+        fontWeight: 900,
+        fontSize: '1.35rem',
+        color: 'var(--dark)',
+        letterSpacing: '-0.01em',
+        lineHeight: 1,
+      }}>
+        Yes <em style={{ fontStyle: 'italic', color: 'var(--coral)' }}>To</em> Life
+        <span style={{
+          fontFamily: 'var(--font-body)',
+          fontWeight: 400,
+          fontSize: '0.6rem',
+          letterSpacing: '0.18em',
+          textTransform: 'uppercase',
+          color: 'var(--dark-mid)',
+          display: 'block',
+          marginTop: '1px',
+        }}>Travel</span>
+      </span>
+    </div>
+  )
+}
+
+function LogoWordmarkLight() {
+  return (
+    <span style={{
+      fontFamily: 'var(--font-display)',
+      fontWeight: 900,
+      fontSize: '1.5rem',
+      color: 'var(--white)',
+      letterSpacing: '-0.01em',
+    }}>
+      Yes <em style={{ fontStyle: 'italic', color: 'var(--peach)' }}>To</em> Life Travel
+    </span>
   )
 }
 
 function ToolCard({ tool, index, onClick }: { tool: Tool; index: number; onClick: () => void }) {
   const [hovered, setHovered] = useState(false)
+
+  const isCoralAccent = tool.accentColor === '#E8523A'
+  const isPeach = tool.accentColor === '#F4A882'
 
   return (
     <button
@@ -292,72 +413,68 @@ function ToolCard({ tool, index, onClick }: { tool: Tool; index: number; onClick
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        background: hovered ? 'var(--surface)' : 'var(--deep)',
-        border: 'none',
+        background: hovered ? 'var(--white)' : 'var(--blush)',
+        border: `2px solid ${hovered ? tool.accentColor : 'var(--pink-soft)'}`,
+        borderRadius: 16,
         cursor: 'pointer',
-        padding: '2rem',
+        padding: '1.75rem',
         textAlign: 'left',
-        transition: 'background 0.25s ease',
-        animation: `fadeUp 0.6s ${index * 0.07}s ease both`,
+        transition: 'all 0.22s ease',
+        width: '100%',
         position: 'relative',
         overflow: 'hidden',
-        width: '100%',
+        animation: `fadeUp 0.5s ${index * 0.06}s ease both`,
+        boxShadow: hovered ? '0 8px 32px rgba(232,82,58,0.12)' : '0 2px 8px rgba(44,31,26,0.04)',
+        transform: hovered ? 'translateY(-3px)' : 'none',
       }}
     >
-      <div style={{
+      {/* Number watermark */}
+      <span style={{
         position: 'absolute',
-        top: 0, left: 0, right: 0,
-        height: 2,
-        background: hovered
-          ? `linear-gradient(to right, ${tool.accentColor}44, ${tool.accentColor}, ${tool.accentColor}44)`
-          : 'transparent',
-        transition: 'all 0.3s ease',
-      }} />
+        top: '0.75rem',
+        right: '1rem',
+        fontFamily: 'var(--font-display)',
+        fontWeight: 900,
+        fontSize: '3.5rem',
+        color: hovered ? tool.accentColor + '18' : 'var(--pink-soft)',
+        lineHeight: 1,
+        transition: 'color 0.22s',
+        userSelect: 'none',
+      }}>{tool.number}</span>
 
+      {/* Icon */}
       <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        marginBottom: '1.25rem',
+        width: 46, height: 46,
+        background: hovered ? tool.accentColor : 'var(--white)',
+        borderRadius: 12,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: hovered ? 'white' : tool.accentColor,
+        marginBottom: '1.1rem',
+        transition: 'all 0.22s ease',
+        border: `1.5px solid ${hovered ? tool.accentColor : 'var(--pink-soft)'}`,
+        boxShadow: hovered ? `0 4px 14px ${tool.accentColor}44` : 'none',
       }}>
-        <div style={{
-          width: 44, height: 44,
-          border: `1px solid ${hovered ? tool.accentColor + '66' : 'var(--border2)'}`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: hovered ? tool.accentColor : 'var(--muted)',
-          transition: 'all 0.25s ease',
-        }}>
-          {tool.icon}
-        </div>
-        <span style={{
-          fontFamily: 'var(--font-display)',
-          fontSize: '2rem',
-          fontWeight: 300,
-          color: hovered ? tool.accentColor + '44' : 'var(--border2)',
-          transition: 'color 0.25s ease',
-          lineHeight: 1,
-        }}>{tool.number}</span>
+        {tool.icon}
       </div>
 
-      <div style={{ marginBottom: '0.75rem' }}>
+      <div style={{ marginBottom: '0.6rem' }}>
         <div style={{
           fontFamily: 'var(--font-display)',
-          fontSize: '1.25rem',
-          fontWeight: 400,
-          color: hovered ? 'var(--cream)' : 'var(--text)',
-          lineHeight: 1.2,
-          transition: 'color 0.25s ease',
+          fontSize: '1.15rem',
+          fontWeight: 900,
+          color: 'var(--dark)',
+          lineHeight: 1.15,
         }}>
           {tool.title}
         </div>
         <div style={{
           fontFamily: 'var(--font-display)',
-          fontSize: '1.25rem',
-          fontWeight: 300,
+          fontSize: '1.1rem',
+          fontWeight: 700,
           fontStyle: 'italic',
-          color: hovered ? tool.accentColor : 'var(--muted)',
-          lineHeight: 1.2,
-          transition: 'color 0.25s ease',
+          color: hovered ? tool.accentColor : 'var(--dark-mid)',
+          lineHeight: 1.15,
+          transition: 'color 0.22s',
         }}>
           {tool.subtitle}
         </div>
@@ -365,27 +482,28 @@ function ToolCard({ tool, index, onClick }: { tool: Tool; index: number; onClick
 
       <p style={{
         fontSize: '0.8rem',
-        color: 'var(--muted)',
-        lineHeight: 1.7,
-        marginBottom: '1.5rem',
+        color: 'var(--dark-mid)',
+        lineHeight: 1.65,
+        marginBottom: '1.25rem',
+        fontWeight: 300,
       }}>
         {tool.description}
       </p>
 
       <div style={{
-        display: 'flex',
+        display: 'inline-flex',
         alignItems: 'center',
-        gap: '0.4rem',
-        fontSize: '0.7rem',
-        letterSpacing: '0.12em',
-        textTransform: 'uppercase',
-        color: hovered ? tool.accentColor : 'var(--border2)',
-        transition: 'color 0.25s ease',
+        gap: '0.35rem',
+        fontFamily: 'var(--font-hand)',
+        fontSize: '0.9rem',
+        fontWeight: 600,
+        color: hovered ? tool.accentColor : 'var(--dark-mid)',
+        transition: 'color 0.22s',
       }}>
-        <span>Activate System</span>
-        <ArrowRight size={12} style={{
+        Activate
+        <ArrowRight size={14} style={{
           transform: hovered ? 'translateX(4px)' : 'none',
-          transition: 'transform 0.2s ease',
+          transition: 'transform 0.2s',
         }} />
       </div>
     </button>
