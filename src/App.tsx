@@ -27,10 +27,10 @@ const tools: Tool[] = [
   {
     id: 'flights',
     icon: <Plane size={28} />,
-    title: 'Flight Intelligence',
-    subtitle: 'Find every angle on your route',
-    tagline: 'routes · fares · awards · hidden costs',
-    description: 'One comprehensive analysis covering every carrier on your route, the exact dates where fares drop below intended pricing, true door-to-door costs across all nearby airports, foreign market price arbitrage, award space opportunities, and the optimal sequence to book everything in.',
+    title: 'Find My Flight',
+    subtitle: 'Every angle. Every deal. One answer.',
+    tagline: 'carriers · fare windows · awards · true cost',
+    description: 'Tell us where you want to go and we find every carrier, the exact dates fares drop, true door-to-door cost across all nearby airports, miles redemption paths, and the precise order to book it all — so the only thing left to do is say yes.',
     accentColor: '#E8523A',
     bgColor: '#FFF0EE',
     fields: [
@@ -40,7 +40,7 @@ const tools: Tool[] = [
       { key: 'travelers', label: 'Who\'s Traveling', placeholder: 'e.g. 2 adults, prefer business class, economy is fine if the deal is good' },
       { key: 'programs', label: 'Loyalty Programs (optional)', placeholder: 'e.g. Chase UR, Amex MR, United MileagePlus, Delta SkyMiles', optional: true },
     ],
-    buildPrompt: (v) => `You are an elite travel intelligence system. Produce a COMPREHENSIVE flight intelligence report for the trip below. Structure your response with clear ## section headers. Be specific, practical, and direct — no filler.
+    buildPrompt: (v) => `You are an elite travel deal specialist. Your job is to make this trip happen for the best possible price. Produce a COMPREHENSIVE flight report for the trip below. Use clear ## section headers. Be specific, practical, direct — no filler, no caveats, just actionable intelligence.
 
 **TRIP DETAILS**
 - From: ${v.origin}
@@ -54,32 +54,32 @@ ${v.programs ? `- Loyalty programs: ${v.programs}` : ''}
 ## 1. Every Carrier On This Route
 Map ALL operators: major airlines, regional subsidiaries, charter services, wet lease arrangements, and codeshare combinations that produce a cheaper seat on the same plane. For each, note the booking channel and realistic price range.
 
-## 2. When To Fly (Calendar Intelligence)
-Identify the specific date windows within ${v.dates} where airline pricing models produce their lowest outputs due to demand forecasting gaps, schedule changes, or inventory management. Name exact days or date ranges and explain why they’re cheaper.
+## 2. The Best Dates To Fly
+Identify the specific date windows within ${v.dates} where pricing drops below normal due to demand forecasting gaps, schedule changes, or inventory quirks. Name exact days or ranges and explain why they’re cheaper.
 
 ## 3. True Door-to-Door Cost
-For every realistic airport combination on both ends, calculate the complete ground cost (transport, parking, time value). Identify the single combination that produces the lowest total journey cost — not just the cheapest airfare.
+For every realistic airport combination on both ends, calculate the complete ground cost (transport, parking, time value). Identify the single combination with the lowest total journey cost — not just the cheapest airfare.
 
-## 4. Foreign Market Arbitrage
-Which country markets sell tickets for this route at lower prices than domestic platforms? Name specific booking sites, the currency/payment approach, realistic savings, and any VPN or geographic access considerations.
+## 4. Foreign Market Deals
+Which country booking markets sell tickets for this route cheaper than domestic platforms? Name specific sites, currency/payment approach, realistic savings, and any access considerations.
 
-## 5. Award & Miles Opportunities
-${v.programs ? `Using ${v.programs}: identify` : 'Identify'} every award redemption path for this route — direct program options, partner airline sweet spots, transfer partner chains, and the specific calendar windows when premium award space opens up. Include redemption rates and which cabin classes represent best value.
+## 5. Miles & Award Opportunities
+${v.programs ? `Using ${v.programs}: identify` : 'Identify'} every award redemption path — direct options, partner airline sweet spots, transfer chains, and when premium award space typically opens. Include redemption rates and best-value cabin classes.
 
-## 6. Hidden Cost Forensics
-For a typical booking on this route, surface every charge that doesn’t appear on the headline fare: baggage fees, seat selection, change fees, credit card surcharges, airport facility charges, and costs that appear only after commitment.
+## 6. Hidden Costs To Know Before You Book
+Surface every charge that doesn’t show in the headline fare: baggage, seat selection, change fees, credit card surcharges, airport charges — anything that appears only after commitment.
 
-## 7. Your Optimal Booking Sequence
-Give me the exact order of actions to take right now to secure the lowest total cost. What to book first, what to wait on, what daily signal tells me the window is permanently closing, and the single most important thing to do in the next 48 hours.
+## 7. Book It: Your Action Plan
+The exact order of steps to take right now for the lowest total cost. What to book first, what to wait on, the signal that tells you the window is closing, and the single most important thing to do in the next 48 hours.
 `,
   },
   {
     id: 'hotels',
     icon: <Hotel size={28} />,
-    title: 'Hotel Deal Hunter',
-    subtitle: 'Find luxury at the real price',
+    title: 'Find My Hotel',
+    subtitle: 'Luxury at the price that says yes.',
     tagline: 'flash sales · points · unpublished rates · direct deals',
-    description: 'A full sweep of 4 and 5-star properties at your destination — flash sales, points redemption sweet spots, unpublished rates from calling direct, rate parity violations between OTAs and hotel websites, and the top specific properties ranked by value right now.',
+    description: 'Tell us where you’re staying and we surface every flash sale, points sweet spot, rate that never makes it onto OTAs, and the exact properties that deliver genuine luxury at prices worth saying yes to.',
     accentColor: '#8B9ED9',
     bgColor: '#EEF1FB',
     fields: [
@@ -88,7 +88,7 @@ Give me the exact order of actions to take right now to secure the lowest total 
       { key: 'preferences', label: 'What You\'re Looking For', placeholder: 'e.g. Overwater bungalow or beachfront, adults-only preferred, pool essential, open to boutique or big brand', multiline: true },
       { key: 'programs', label: 'Hotel Loyalty Programs (optional)', placeholder: 'e.g. Marriott Bonvoy, World of Hyatt, Hilton Honors, Amex Fine Hotels', optional: true },
     ],
-    buildPrompt: (v) => `You are an elite luxury hotel deal specialist. Produce a COMPREHENSIVE hotel intelligence report for the stay below. Use clear ## section headers. Be specific — name actual properties, actual programs, actual strategies.
+    buildPrompt: (v) => `You are an elite luxury hotel deal specialist. Your job is to find the best possible stay at the best possible price. Produce a COMPREHENSIVE hotel report for the trip below. Use clear ## section headers. Be specific — name actual properties, programs, and strategies. Make it easy to say yes.
 
 **STAY DETAILS**
 - Destination: ${v.destination}
@@ -98,35 +98,36 @@ ${v.programs ? `- Loyalty programs: ${v.programs}` : ''}
 
 ---
 
-## 1. Flash Sales & Active Deals
-Identify any current or upcoming flash sales, limited-time promotions, or seasonal offers at 4–5 star properties in ${v.destination}. Include which booking platforms to monitor and how far in advance these typically appear.
+## 1. Deals Available Right Now
+Current or upcoming flash sales, limited-time promotions, or seasonal offers at 4–5 star properties in ${v.destination}. Which platforms to monitor and how far in advance these appear.
 
-## 2. Points & Award Redemptions
-${v.programs ? `Using ${v.programs}: find` : 'Find'} the best points redemption opportunities at premium properties here — which programs, which specific hotels, the redemption rate in points per night, and whether points + cash options improve the math. Flag any outsized value sweet spots.
+## 2. Points That Actually Pay Off
+${v.programs ? `Using ${v.programs}: find` : 'Find'} the best points redemptions at premium properties here — which programs, which hotels, points-per-night rates, and whether points + cash improves the math. Flag any outsized sweet spots.
 
-## 3. Unpublished Rate Strategies
-Explain exactly how to access rates that don’t appear on any OTA: calling reservations directly and what to say, corporate/AAA/AARP rate eligibility, travel agent rates (and how to access them), soft-brand vs flagship pricing differences, and any member-only booking portals.
+## 3. Rates You Won’t Find Online
+How to access rates that never appear on OTAs: what to say when you call direct, corporate/AAA/AARP eligibility, travel agent rate access, soft-brand vs. flagship pricing, member-only portals.
 
-## 4. Rate Parity Violations
-For this destination, identify where booking direct consistently beats OTA pricing, which platforms sometimes undercut the hotel’s own rate (and why), and the best OTAs to cross-reference for this specific market.
+## 4. Where Direct Booking Wins
+For this destination, when does booking direct beat OTAs? Which platforms sometimes undercut the hotel’s own rate and why? Best sites to cross-reference for this specific market.
 
-## 5. Best-Value Properties Right Now
-Recommend 5 specific 4–5 star properties that best match the preferences above. For each: name, why it fits, realistic rate range, best booking strategy (direct / which OTA / which points program), and any insider notes about value vs. the marketed price.
+## 5. The Best Properties For This Trip
+5 specific 4–5 star properties that match the preferences above. For each: name, why it fits, realistic rate range, best booking strategy, and any insider notes on real value vs. marketed price.
 
-## 6. Timing & Shoulder Season Windows
-For ${v.destination}, when do luxury rates drop significantly? Identify the shoulder season dates near ${v.dates} where the same properties cost materially less, and what’s typically sacrificed (if anything) by going at those times.
+## 6. The Cheapest Time To Go (Near Your Dates)
+When do rates at these properties drop significantly? Shoulder season windows near ${v.dates} where the same hotels cost materially less — and what, if anything, changes by going then.
 
-## 7. Package & Bundle Opportunities
-Are there flight + hotel combinations that produce a lower combined cost than booking separately? Name specific operators, booking platforms, or airline programs that offer genuine package value (not inflated package pricing) for this destination.
+## 7. Bundle & Save Opportunities
+Flight + hotel combinations that genuinely cost less than booking separately. Specific operators, booking platforms, or airline programs offering real package value (not inflated packaging) for this destination.
 `,
   },
 ]
 
 const marqueeItems = [
-  '\u2708 Carrier Intelligence', '\ud83d\uddd3 Calendar Fare Scanning', '\ud83d\uddfa Ground Cost Analysis',
-  '\ud83c\udf0d Foreign Market Arbitrage', '\ud83c\udfc6 Award Space Hunting', '\ud83d\udd0d True Cost Forensics',
-  '\ud83d\udccb Booking Sequence Strategy', '\ud83c\udfe8 Luxury Deal Hunting', '\u2022 Flash Sales', '\u2022 Unpublished Rates',
-  '\u2022 Points Redemptions', '\u2022 Rate Parity Violations', '\u2728 Smart. Direct. No fluff.',
+  '✈ Find the cheapest flight', '🏨 Score the luxury deal', '🏆 Unlock award redemptions',
+  '🗺 True door-to-door cost', '🌍 Foreign market prices', '🔍 Hidden fees exposed',
+  '📋 Book in the right order', '✨ Say yes to the trip', '✈ Find the cheapest flight',
+  '🏨 Score the luxury deal', '🏆 Unlock award redemptions', '🗺 True door-to-door cost',
+  '🌍 Foreign market prices', '🔍 Hidden fees exposed', '📋 Book in the right order', '✨ Say yes to the trip',
 ]
 
 export default function App() {
@@ -154,7 +155,7 @@ export default function App() {
           fontSize: '1rem',
           fontWeight: 600,
           color: 'var(--coral)',
-        }}>AI-powered travel intelligence</div>
+        }}>your yes is closer than you think</div>
       </header>
 
       {/* Hero */}
@@ -173,11 +174,11 @@ export default function App() {
         <div style={{ position: 'absolute', top: '2rem', right: '2.5rem', width: 90, height: 90 }}>
           <svg className="spinning-badge" viewBox="0 0 90 90" width="90" height="90">
             <defs><path id="circle" d="M 45,45 m -32,0 a 32,32 0 1,1 64,0 a 32,32 0 1,1 -64,0" /></defs>
-            <text style={{ fontSize: 10.5, fill: 'rgba(255,255,255,0.85)', fontFamily: 'var(--font-hand)', fontWeight: 600, letterSpacing: 3 }}>
-              <textPath href="#circle">FLIGHTS · HOTELS · AWARDS · DEALS · </textPath>
+            <text style={{ fontSize: 10.5, fill: 'rgba(255,255,255,0.85)', fontFamily: 'var(--font-hand)', fontWeight: 600, letterSpacing: 2.5 }}>
+              <textPath href="#circle">SAY YES · TO LIFE · TO TRAVEL · </textPath>
             </text>
             <circle cx="45" cy="45" r="14" fill="rgba(255,255,255,0.15)" />
-            <text x="45" y="49" textAnchor="middle" style={{ fontSize: 14, fill: 'white', fontFamily: 'var(--font-body)' }}>✦</text>
+            <text x="45" y="50" textAnchor="middle" style={{ fontSize: 16, fill: 'white', fontFamily: 'var(--font-body)' }}>✈</text>
           </svg>
         </div>
 
@@ -188,7 +189,7 @@ export default function App() {
             fontWeight: 600,
             color: 'rgba(255,255,255,0.85)',
             marginBottom: '1rem',
-          }}>stop overpaying. start traveling smarter.</p>
+          }}>the deal that makes it easy to say yes</p>
 
           <h1 style={{
             fontFamily: 'var(--font-display)',
@@ -199,19 +200,19 @@ export default function App() {
             marginBottom: '1.5rem',
             letterSpacing: '-0.01em',
           }}>
-            Travel at the level<br />
-            <em style={{ fontStyle: 'italic', color: 'var(--peach)' }}>insiders don’t share.</em>
+            Your dream trip is<br />
+            <em style={{ fontStyle: 'italic', color: 'var(--peach)' }}>closer than you think.</em>
           </h1>
 
           <p style={{
-            color: 'rgba(255,255,255,0.8)',
-            maxWidth: 480,
+            color: 'rgba(255,255,255,0.82)',
+            maxWidth: 500,
             margin: '0 auto 2.5rem',
             fontSize: '1rem',
-            lineHeight: 1.8,
+            lineHeight: 1.85,
             fontWeight: 300,
           }}>
-            Two AI intelligence systems — one for flights, one for hotels — each covering every angle so you never leave money on the table.
+            Tell us where you want to go. We’ll do the work to get you there for less — finding every deal, every hidden rate, every mile redemption so the only thing left to do is book it.
           </p>
 
           <button
@@ -232,7 +233,7 @@ export default function App() {
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 28px rgba(0,0,0,0.2)' }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'none'; (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 20px rgba(0,0,0,0.15)' }}
           >
-            Get Started →
+            Find My Deal →
           </button>
         </div>
       </section>
@@ -274,15 +275,16 @@ export default function App() {
             color: 'var(--coral)',
             display: 'block',
             marginBottom: '0.5rem',
-          }}>choose your intelligence system</span>
+          }}>where are you dreaming of going?</span>
           <h2 style={{
             fontFamily: 'var(--font-display)',
             fontWeight: 900,
             fontSize: 'clamp(2rem, 4vw, 3rem)',
             color: 'var(--dark)',
-            lineHeight: 1.1,
-          }}>Flights or Hotels.<br />
-            <em style={{ fontStyle: 'italic', color: 'var(--coral)', fontWeight: 700 }}>We’ve got both covered.</em>
+            lineHeight: 1.15,
+          }}>
+            Tell us your trip.<br />
+            <em style={{ fontStyle: 'italic', color: 'var(--coral)', fontWeight: 700 }}>We’ll find the way to make it happen.</em>
           </h2>
         </div>
 
@@ -306,11 +308,18 @@ export default function App() {
       }}>
         <LogoWordmarkLight />
         <p style={{
+          fontFamily: 'var(--font-hand)',
+          fontSize: '1rem',
+          fontWeight: 600,
+          marginTop: '0.6rem',
+          color: 'var(--peach)',
+        }}>life is short. say yes to the trip.</p>
+        <p style={{
           fontFamily: 'var(--font-body)',
-          fontSize: '0.8rem',
-          marginTop: '0.75rem',
-          color: 'rgba(240,202,188,0.5)',
-        }}>Powered by Claude AI · Elite Travel Intelligence</p>
+          fontSize: '0.75rem',
+          marginTop: '0.5rem',
+          color: 'rgba(240,202,188,0.4)',
+        }}>Powered by Claude AI</p>
       </footer>
 
       {activeTool && <ToolModal tool={activeTool} onClose={() => setActiveTool(null)} />}
@@ -404,7 +413,7 @@ function ToolCard({ tool, onClick }: { tool: Tool; onClick: () => void }) {
         color: tool.accentColor,
         userSelect: 'none',
       }}>
-        {tool.id === 'flights' ? '\u2708' : '\u2302'}
+        {tool.id === 'flights' ? '✈' : '⌂'}
       </div>
 
       {/* Icon badge */}
@@ -482,7 +491,7 @@ function ToolCard({ tool, onClick }: { tool: Tool; onClick: () => void }) {
         fontSize: '0.9rem',
         transition: 'all 0.22s ease',
       }}>
-        Start Analysis
+        {tool.id === 'flights' ? 'Find My Flight Deal' : 'Find My Hotel Deal'}
         <ArrowRight size={15} style={{
           transform: hovered ? 'translateX(3px)' : 'none',
           transition: 'transform 0.2s',
