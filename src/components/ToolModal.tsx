@@ -46,7 +46,7 @@ const BADGE_COLORS: Record<string, { bg: string; text: string }> = {
   'Family Favorite':    { bg: '#8B9ED9', text: '#fff' },
 }
 
-// 3-strategy JSON extractor — handles Claude adding text before/after JSON
+// 3-strategy JSON extractor — handles Claude wrapping JSON in text or markdown
 function parseResult(raw: string): ParsedResult {
   const strategies = [
     raw.trim(),
@@ -59,7 +59,7 @@ function parseResult(raw: string): ParsedResult {
       const p = JSON.parse(attempt)
       if (p.trips && Array.isArray(p.trips) && p.trips.length > 0) return p as TripResult
       if (p.deals && Array.isArray(p.deals) && p.deals.length > 0) return p as DealResult
-    } catch { /* try next strategy */ }
+    } catch { /* try next */ }
   }
   return null
 }
@@ -122,11 +122,9 @@ export default function ToolModal({ tool, onClose }: Props) {
     <div onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
       style={{ position: 'fixed', inset: 0, background: 'rgba(44,31,26,0.6)', backdropFilter: 'blur(6px)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', animation: 'popIn 0.22s ease both' }}
     >
-      {/* Modal — NO overflow:hidden on cards so text never gets clipped */}
       <div style={{ background: 'var(--white)', borderRadius: 20, border: `2px solid ${tool.accentColor}44`, width: '100%', maxWidth: 740, maxHeight: '90vh', overflow: 'auto', boxShadow: '0 24px 64px rgba(44,31,26,0.18)' }}>
         <div style={{ height: 5, background: `linear-gradient(to right, ${tool.accentColor}, var(--peach))`, borderRadius: '20px 20px 0 0' }} />
 
-        {/* Header */}
         <div style={{ padding: '1.5rem 2rem 1.25rem', borderBottom: '1px solid var(--pink-soft)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', background: 'var(--blush)' }}>
           <div>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.65rem', fontWeight: 900, color: 'var(--dark)', lineHeight: 1.1 }}>{tool.title}</h2>
@@ -138,7 +136,6 @@ export default function ToolModal({ tool, onClose }: Props) {
           ><X size={16} /></button>
         </div>
 
-        {/* Form */}
         {!result && (
           <div style={{ padding: '1.75rem 2rem' }}>
             <p style={{ fontSize: '0.88rem', color: 'var(--dark-mid)', lineHeight: 1.7, marginBottom: '1.75rem', fontWeight: 300 }}>{tool.description}</p>
@@ -164,20 +161,19 @@ export default function ToolModal({ tool, onClose }: Props) {
             <button onClick={handleSubmit} disabled={!allFilled || loading}
               style={{ width: '100%', padding: '0.95rem', background: allFilled && !loading ? tool.accentColor : 'var(--pink-soft)', border: 'none', borderRadius: 12, color: allFilled && !loading ? 'white' : 'var(--dark-mid)', fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 700, cursor: allFilled && !loading ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.2s ease', boxShadow: allFilled && !loading ? `0 4px 16px ${tool.accentColor}44` : 'none' }}
             >
-              {loading ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> {tool.id === 'randomizer' ? 'Finding your perfect trips...' : 'Finding your best deals...'}</> : submitLabel}
+              {loading ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />{tool.id === 'randomizer' ? ' Finding your perfect trips...' : ' Finding your best deals...'}</> : submitLabel}
             </button>
             {error && <div style={{ marginTop: '1rem', padding: '0.875rem 1rem', background: '#FFF0EE', border: '1.5px solid #F4A882', borderRadius: 10, color: 'var(--coral-dark)', fontSize: '0.85rem', lineHeight: 1.6 }}>{error}</div>}
           </div>
         )}
 
-        {/* Results */}
         {result && (
           <div ref={resultRef} style={{ padding: '1.75rem 2rem', animation: 'fadeUp 0.35s ease both' }}>
             <div style={{ background: 'var(--blush)', borderRadius: 12, padding: '1rem 1.25rem', marginBottom: '1.5rem', borderLeft: `4px solid ${tool.accentColor}` }}>
               <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.88rem', color: 'var(--dark-mid)', lineHeight: 1.7, margin: 0 }}>{result.summary}</p>
             </div>
 
-            {/* DEAL CARDS — no overflow:hidden, price+title on separate rows to prevent cutoff */}
+            {/* DEAL CARDS — title/price stacked vertically so nothing gets clipped */}
             {!isTripResult(result) && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.25rem' }}>
                 {result.deals.map(deal => {
@@ -188,17 +184,12 @@ export default function ToolModal({ tool, onClose }: Props) {
                       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = 'none' }}
                     >
                       <div style={{ padding: '1rem 1.25rem 0.75rem', borderBottom: '1px solid var(--pink-soft)' }}>
-                        {/* Row 1: title + badge */}
-                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.4rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.35rem' }}>
                           <span style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: '1.05rem', color: 'var(--dark)', wordBreak: 'break-word', flex: 1, minWidth: 0 }}>#{deal.rank} {deal.title}</span>
                           <span style={{ background: bs.bg, color: bs.text, fontFamily: 'var(--font-hand)', fontWeight: 600, fontSize: '0.78rem', padding: '0.2rem 0.65rem', borderRadius: 100, whiteSpace: 'nowrap', flexShrink: 0 }}>{deal.badge}</span>
                         </div>
-                        {/* Row 2: price */}
-                        <div style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: '1.2rem', color: tool.accentColor, lineHeight: 1, wordBreak: 'break-word' }}>{deal.price_range}</div>
-                        {/* Row 3: route/strategy */}
-                        {(deal.route || deal.strategy) && (
-                          <div style={{ fontFamily: 'var(--font-body)', fontSize: '0.75rem', color: 'var(--dark-mid)', marginTop: '0.25rem', opacity: 0.8 }}>{deal.route || deal.strategy}</div>
-                        )}
+                        <div style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: '1.2rem', color: tool.accentColor, wordBreak: 'break-word' }}>{deal.price_range}</div>
+                        {(deal.route || deal.strategy) && <div style={{ fontFamily: 'var(--font-body)', fontSize: '0.75rem', color: 'var(--dark-mid)', marginTop: '0.2rem', opacity: 0.8 }}>{deal.route || deal.strategy}</div>}
                       </div>
                       <div style={{ padding: '0.85rem 1.25rem' }}>
                         {deal.timing && <div style={{ fontFamily: 'var(--font-body)', fontSize: '0.78rem', color: 'var(--dark-mid)', marginBottom: '0.5rem', opacity: 0.8 }}>{deal.timing}</div>}
@@ -214,7 +205,7 @@ export default function ToolModal({ tool, onClose }: Props) {
               </div>
             )}
 
-            {/* TRIP CARDS — no overflow:hidden */}
+            {/* TRIP CARDS */}
             {isTripResult(result) && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginBottom: '1.25rem' }}>
                 {result.trips.map(trip => {
@@ -224,7 +215,6 @@ export default function ToolModal({ tool, onClose }: Props) {
                       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 28px rgba(138,138,60,0.15)' }}
                       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = 'none' }}
                     >
-                      {/* Trip header */}
                       <div style={{ padding: '1.1rem 1.4rem 0.9rem', borderBottom: '1px solid var(--pink-soft)', background: 'var(--cream)', borderRadius: '15px 15px 0 0' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.25rem' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', flex: 1, minWidth: 0 }}>
@@ -240,7 +230,6 @@ export default function ToolModal({ tool, onClose }: Props) {
                         <p style={{ fontFamily: 'var(--font-hand)', fontWeight: 600, fontSize: '0.88rem', color: 'var(--dark-mid)', margin: 0, fontStyle: 'italic' }}>{trip.vibe}</p>
                       </div>
 
-                      {/* Flight + Hotel */}
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
                         <div style={{ padding: '1rem 1.25rem', borderRight: '1px solid var(--pink-soft)', borderBottom: '1px solid var(--pink-soft)' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.6rem' }}>
