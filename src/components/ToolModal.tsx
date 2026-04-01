@@ -42,7 +42,8 @@ export default function ToolModal({ tool, onClose }: Props) {
     }
   }, [result])
 
-  const allFilled = tool.fields.every(f => (values[f.key] || '').trim().length > 0)
+  // Optional fields are skipped — only required fields must be filled
+  const allFilled = tool.fields.every(f => f.optional || (values[f.key] || '').trim().length > 0)
 
   const handleSubmit = async () => {
     if (!allFilled || loading) return
@@ -78,6 +79,8 @@ export default function ToolModal({ tool, onClose }: Props) {
   }
 
   const handleReset = () => { setResult(null); setError(null); setValues({}) }
+
+  const submitLabel = tool.id === 'flights' ? 'Find My Flight Deal' : 'Find My Hotel Deal'
 
   return (
     <div
@@ -123,14 +126,6 @@ export default function ToolModal({ tool, onClose }: Props) {
           background: 'var(--blush)',
         }}>
           <div>
-            <span style={{
-              fontFamily: 'var(--font-hand)',
-              fontSize: '0.9rem',
-              fontWeight: 600,
-              color: tool.accentColor,
-              display: 'block',
-              marginBottom: '0.2rem',
-            }}>System {tool.number}</span>
             <h2 style={{
               fontFamily: 'var(--font-display)',
               fontSize: '1.65rem',
@@ -138,9 +133,15 @@ export default function ToolModal({ tool, onClose }: Props) {
               color: 'var(--dark)',
               lineHeight: 1.1,
             }}>
-              {tool.title}{' '}
-              <em style={{ fontStyle: 'italic', color: tool.accentColor }}>{tool.subtitle}</em>
+              {tool.title}
             </h2>
+            <p style={{
+              fontFamily: 'var(--font-hand)',
+              fontSize: '0.95rem',
+              fontWeight: 600,
+              color: tool.accentColor,
+              marginTop: '0.2rem',
+            }}>{tool.subtitle}</p>
           </div>
           <button
             onClick={onClose}
@@ -173,7 +174,9 @@ export default function ToolModal({ tool, onClose }: Props) {
             {tool.fields.map((field) => (
               <div key={field.key}>
                 <label style={{
-                  display: 'block',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
                   fontFamily: 'var(--font-body)',
                   fontSize: '0.72rem',
                   fontWeight: 500,
@@ -183,6 +186,16 @@ export default function ToolModal({ tool, onClose }: Props) {
                   marginBottom: '0.45rem',
                 }}>
                   {field.label}
+                  {field.optional && (
+                    <span style={{
+                      fontFamily: 'var(--font-hand)',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      letterSpacing: 0,
+                      textTransform: 'none',
+                      color: 'var(--peach)',
+                    }}>— optional</span>
+                  )}
                 </label>
                 {field.multiline ? (
                   <textarea
@@ -261,11 +274,11 @@ export default function ToolModal({ tool, onClose }: Props) {
             {loading ? (
               <>
                 <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
-                Analyzing intelligence...
+                Finding your deal...
               </>
             ) : (
               <>
-                Activate Intelligence System
+                {submitLabel}
                 <ChevronRight size={16} />
               </>
             )}
@@ -310,7 +323,7 @@ export default function ToolModal({ tool, onClose }: Props) {
                 fontSize: '1rem',
                 fontWeight: 600,
                 color: tool.accentColor,
-              }}>Intelligence Report ✦</span>
+              }}>Your deal breakdown ✦</span>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button
                   onClick={handleReset}
@@ -332,7 +345,7 @@ export default function ToolModal({ tool, onClose }: Props) {
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--dark-mid)' }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--pink-soft)' }}
                 >
-                  <RotateCcw size={11} /> New Query
+                  <RotateCcw size={11} /> New Search
                 </button>
                 <button
                   onClick={handleCopy}
