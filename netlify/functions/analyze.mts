@@ -34,8 +34,14 @@ export default async (req: Request, context: Context) => {
     });
   }
 
+  // Detect tool type from prompt to allocate tokens appropriately
+  const isRandomizer = prompt.includes("RESEARCH BRIEF") && prompt.includes("trips");
+  const maxTokens = isRandomizer ? 4000 : 2500;
+  // Timeout: give enough runway for larger responses (Netlify functions max 26s)
+  const timeoutMs = 24000;
+
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 25000);
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const anthropicResponse = await fetch("https://api.anthropic.com/v1/messages", {
@@ -48,8 +54,8 @@ export default async (req: Request, context: Context) => {
       signal: controller.signal,
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 2000,
-        system: `You are a Yes To Life Travel deal specialist. You MUST respond with ONLY a valid JSON object — no markdown, no backticks, no explanation before or after. Pure JSON only. Your job is to surface the 3-5 best bookable deals for the trip requested. Every deal must include real booking URLs.`,
+        max_tokens: maxTokens,
+        system: `You are a Yes To Life Travel deal specialist. You MUST respond with ONLY a valid JSON object — no markdown, no backticks, no preamble, no explanation. Pure raw JSON only, starting with { and ending with }. Never truncate the JSON — always close every array and object properly.`,
         messages: [
           { role: "user", content: prompt },
         ],
@@ -81,7 +87,7 @@ export default async (req: Request, context: Context) => {
     return new Response(
       JSON.stringify({
         message: isTimeout
-          ? "Analysis took too long. Try being more specific about your dates and route."
+          ? "Analysis took too long — try narrowing your dates or budget range and search again."
           : err?.message || "Internal server error",
       }),
       { status: isTimeout ? 504 : 500, headers: { "Content-Type": "application/json" } }
